@@ -1,0 +1,6 @@
+@startuml
+TelegramBotLayer->ServiceLayer : YouTube video link
+return ok
+ServiceLayer->RepositoryLayer : Persist link
+return ok
+@enduml
