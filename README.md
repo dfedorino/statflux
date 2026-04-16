@@ -9,6 +9,7 @@ Content views service for creators
 ## Архитектура
 
 - bot - слой взаимодействия с Telegram Bot API
+- integration - слой взаимодействия с видеохостингами
 - service - слой бизнес логики
 - repository - слой взаимодействия с БД
 - Main.java - точка входа сервиса
