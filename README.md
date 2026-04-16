@@ -15,6 +15,7 @@ Content views service for creators
 
 - Java 21
 - Maven
+- Junit Jupiter
 
 ## Архитектура
 
