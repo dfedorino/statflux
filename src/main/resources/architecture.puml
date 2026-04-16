@@ -1,0 +1,25 @@
+@startuml
+actor User
+
+User -> TelegramBotLayer : link
+return response
+
+TelegramBotLayer -> ServiceLayer : link
+return response
+
+ServiceLayer -> HostingApi : link
+alt youtube
+    HostingApi -> YouTubeHostingApi: YouTube link
+    return view count
+else vk
+    HostingApi -> VkHostingApi: VK link
+    return view count
+end
+
+ServiceLayer -> RepositoryLayer : persist link + count
+return boolean
+
+database PostgreSQL
+RepositoryLayer -> PostgreSQL : persist link + count
+return boolean
+@enduml
