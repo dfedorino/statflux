@@ -1,4 +1,4 @@
-package com.dfedorino.influx.repository;
+package com.rmrf.statflux.repository;
 
 public interface RepositoryLayer {
     boolean save(String link);

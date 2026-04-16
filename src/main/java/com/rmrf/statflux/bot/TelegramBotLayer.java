@@ -1,4 +1,4 @@
-package com.dfedorino.influx.bot;
+package com.rmrf.statflux.bot;
 
 public interface TelegramBotLayer {
 }

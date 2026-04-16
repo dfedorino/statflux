@@ -1,4 +1,4 @@
-# INFLUX
+# STATFLUX
 Content views service for creators
 
 ## Стек
