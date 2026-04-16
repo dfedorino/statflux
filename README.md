@@ -10,6 +10,8 @@ Content views service for creators
 
 - bot - слой взаимодействия с Telegram Bot API
 - integration - слой взаимодействия с видеохостингами
+  - vk - слой взаимодействия с VK Video
+  - youtube - слой взаимодействия с YouTube
 - service - слой бизнес логики
 - repository - слой взаимодействия с БД
 - Main.java - точка входа сервиса
