@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
