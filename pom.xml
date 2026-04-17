@@ -15,6 +15,8 @@
         <slf4j-simple.version>2.0.17</slf4j-simple.version>
         <junit-jupiter.version>6.0.3</junit-jupiter.version>
         <assertj-core.version>3.27.7</assertj-core.version>
+        <h2.version>2.4.240</h2.version>
+        <mockito-core.version>5.23.0</mockito-core.version>
         <telegram-telegrambots-longpolling.version>9.5.0</telegram-telegrambots-longpolling.version>
         <telegram-telegrambots-client.version>9.5.0</telegram-telegrambots-client.version>
     </properties>
@@ -44,6 +46,20 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj-core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.h2database/h2 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
 
