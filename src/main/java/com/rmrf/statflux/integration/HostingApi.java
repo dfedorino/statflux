@@ -7,7 +7,7 @@ import lombok.NonNull;
 public interface HostingApi {
 
     @NonNull
-    Result<ParseVideoResponse> viewCount(String rawLink);
+    Result<LinkMetadataResponse> linkMetadata(String rawLink);
 
     @NonNull
     String hostingName();
