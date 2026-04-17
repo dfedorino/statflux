@@ -2,7 +2,7 @@ package com.rmrf.statflux;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rmrf.statflux.domain.dto.ParseVideoResponse;
+import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
 import com.rmrf.statflux.domain.exceptions.BadUrlException;
 import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
 import com.rmrf.statflux.integration.HostingApiFactory;
@@ -16,7 +16,7 @@ public class HostingApiFactoryTest {
 
     private static final YouTubeHostingApi youtubeStub = new YouTubeHostingApi() {
         @Override
-        public @NonNull Result<ParseVideoResponse> viewCount(String rawLink) {
+        public @NonNull Result<LinkMetadataResponse> linkMetadata(String rawLink) {
             throw new UnsupportedOperationException();
         }
 
@@ -28,7 +28,7 @@ public class HostingApiFactoryTest {
 
     private static final VkHostingApi vkStub = new VkHostingApi() {
         @Override
-        public @NonNull Result<ParseVideoResponse> viewCount(String rawLink) {
+        public @NonNull Result<LinkMetadataResponse> linkMetadata(String rawLink) {
             throw new UnsupportedOperationException();
         }
 
