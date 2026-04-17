@@ -13,4 +13,9 @@ public record Failure<T>(@NonNull Throwable exception) implements Result<T> {
         Objects.requireNonNull(e);
         return new Failure<>(e);
     }
+
+    @Override
+    public boolean isSuccess() {
+        return false;
+    }
 }

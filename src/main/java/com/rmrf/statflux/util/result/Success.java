@@ -9,4 +9,9 @@ public record Success<T>(T result) implements Result<T> {
         Objects.requireNonNull(r);
         return new Success<>(r);
     }
+
+    @Override
+    public boolean isSuccess() {
+        return true;
+    }
 }
