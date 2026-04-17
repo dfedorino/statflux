@@ -10,7 +10,13 @@ public interface RepositoryLayer {
     boolean save(@NonNull String hostingName, @NonNull String rawLink, @NonNull String hostingId,
         @NonNull String name, Long views);
 
+    @NonNull
     List<VideoStatsItem> getVideos(Optional<String> skip, Optional<Integer> take);
+
+    @NonNull
+    default List<VideoStatsItem> getVideos() {
+        return getVideos(Optional.empty(), Optional.empty());
+    }
 
     int getTotalVideosCount();
 
