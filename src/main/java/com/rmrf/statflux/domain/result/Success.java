@@ -1,4 +1,4 @@
-package com.rmrf.statflux.util.result;
+package com.rmrf.statflux.domain.result;
 
 import java.util.Objects;
 import lombok.NonNull;

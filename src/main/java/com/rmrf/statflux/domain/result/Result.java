@@ -1,4 +1,4 @@
-package com.rmrf.statflux.util.result;
+package com.rmrf.statflux.domain.result;
 
 public sealed interface Result<T> permits Failure, Success {
 

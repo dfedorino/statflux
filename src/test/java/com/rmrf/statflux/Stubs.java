@@ -3,7 +3,7 @@ package com.rmrf.statflux;
 import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
 import com.rmrf.statflux.integration.vk.VkHostingApi;
 import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
-import com.rmrf.statflux.util.result.Result;
+import com.rmrf.statflux.domain.result.Result;
 import lombok.NonNull;
 
 public class Stubs {

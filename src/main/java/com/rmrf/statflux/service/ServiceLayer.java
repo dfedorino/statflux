@@ -3,7 +3,7 @@ package com.rmrf.statflux.service;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
-import com.rmrf.statflux.util.result.Result;
+import com.rmrf.statflux.domain.result.Result;
 import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;

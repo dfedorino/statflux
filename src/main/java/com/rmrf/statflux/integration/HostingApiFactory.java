@@ -4,9 +4,9 @@ import com.rmrf.statflux.domain.exceptions.BadUrlException;
 import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
 import com.rmrf.statflux.integration.vk.VkHostingApi;
 import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
-import com.rmrf.statflux.util.result.Failure;
-import com.rmrf.statflux.util.result.Result;
-import com.rmrf.statflux.util.result.Success;
+import com.rmrf.statflux.domain.result.Failure;
+import com.rmrf.statflux.domain.result.Result;
+import com.rmrf.statflux.domain.result.Success;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 
