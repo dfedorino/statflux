@@ -20,11 +20,15 @@ Content views service for creators
 ## Архитектура
 
 - bot - слой взаимодействия с Telegram Bot API
+- domain - модели и DTO доменной области
+    - exceptions - кастомные исключения бизнес-логики
+    - dto - DTO
 - integration - слой взаимодействия с видеохостингами
     - vk - слой взаимодействия с VK Video
     - youtube - слой взаимодействия с YouTube
 - service - слой бизнес логики
 - repository - слой взаимодействия с БД
+- util - различные вспомогательные классы
 - Main.java - точка входа сервиса
 
 ## Основные задачи на хакатоне
