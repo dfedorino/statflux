@@ -4,6 +4,7 @@ import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
+import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.integration.HostingApiFactory;
 import com.rmrf.statflux.repository.RepositoryLayer;
@@ -55,7 +56,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                         s.result().views());
                     if (!success) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
-                        yield Failure.of(new Exception("todo"));
+                        yield Failure.of(
+                            new InternalTechErrorException("failed to save metadata to repo"));
                     }
                     yield Success.of(new AddVideoResponse(hostingApi.hostingName()));
                 }
