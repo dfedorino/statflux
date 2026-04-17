@@ -18,6 +18,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 public class ServiceLayerImpl implements ServiceLayer {
 
     private final RepositoryLayer repositoryLayer;
