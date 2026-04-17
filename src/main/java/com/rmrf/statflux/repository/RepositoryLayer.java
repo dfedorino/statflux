@@ -8,6 +8,8 @@ import lombok.NonNull;
 public interface RepositoryLayer {
 
     /**
+     * Сохранение (upsert) метаданных видео
+     *
      * @param hostingName идентификатор хостинга
      * @param rawLink     необработанный url видео
      * @param hostingId   идентификатор видео по данным хостинга
@@ -21,7 +23,6 @@ public interface RepositoryLayer {
     /**
      * @param skip пагинация - сколько документов пропустить
      * @param take пагинация - сколько документов вернуть на одной странице
-     * @return данные, отсортированные
      */
     @NonNull
     List<VideoStatsItem> getVideos(Optional<String> skip, Optional<Integer> take);

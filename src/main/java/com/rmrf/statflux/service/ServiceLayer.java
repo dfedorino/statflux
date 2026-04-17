@@ -10,9 +10,18 @@ import lombok.NonNull;
 
 public interface ServiceLayer {
 
+
+    /**
+     * @param rawUrl url видео
+     * @return результат добавления видео для последующего отслеживания
+     */
     @NonNull
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
+    /**
+     * @param skip пагинация - сколько документов пропустить
+     * @param take пагинация - сколько документов вернуть на одной странице
+     */
     @NonNull
     Result<VideoStatsResponse> getVideos(Optional<String> skip, Optional<Integer> take);
 
@@ -22,10 +31,13 @@ public interface ServiceLayer {
     }
 
     /**
+     * Запуск асинхронного процесса обновления метаданных видео. Результат обновления возвращается
+     * через механизм коллбэка. Одновременный запуск нескольких процессов обновления запрещён.
+     *
      * @param callback вызывается по окончании процесса обновления данных видео. Может вернуть
      *                 Success - процесс обновления завершился успешно, но единичные видео могли
-     *                 быть не обработаны. Failure - процесс обновления полностью завершился
-     *                 неуспехом
+     *                 быть не обработаны из-за ошибок. Failure - процесс обновления полностью
+     *                 завершился неуспехом
      */
     void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback);
 }
