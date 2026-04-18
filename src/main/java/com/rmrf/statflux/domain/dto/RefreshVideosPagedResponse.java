@@ -9,8 +9,10 @@ import lombok.NonNull;
  * @param hasNext     есть ли следующая страница
  * @param hasPrev     есть ли предыдущая страница
  * @param totalViews  общее количество просмотром всех видео в базе
+ * @param hasErrors   если true - при обновлении возникли ошибки
  */
-public record VideoStatsResponse(@NonNull List<VideoStatsItem> items, int totalVideos,
-                                 boolean hasNext, boolean hasPrev, long totalViews) {
+public record RefreshVideosPagedResponse(@NonNull List<VideoStatsItem> items, int totalVideos,
+                                         boolean hasNext, boolean hasPrev, long totalViews,
+                                         boolean hasErrors) {
 
 }

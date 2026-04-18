@@ -82,14 +82,15 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
-    public @NonNull Result<VideoStatsResponse> getVideos(Optional<String> skip,
+    public @NonNull Result<VideoStatsResponse> getVideos(Optional<Integer> skip,
         Optional<Integer> take) {
         try {
             var items = repositoryLayer.getVideos(skip, take);
             var totalLinks = repositoryLayer.getTotalVideosCount();
             var totalViews = repositoryLayer.getTotalViewCount();
             var hasMore = totalLinks > items.size();
-            var resp = new VideoStatsResponse(items, totalLinks, hasMore, totalViews);
+            var hasPrev = skip.filter(s -> s > 0).isPresent();
+            var resp = new VideoStatsResponse(items, totalLinks, hasMore, hasPrev, totalViews);
             return Success.of(resp);
         } catch (Throwable e) {
             log.error("ServiceLayerImpl[getVideos] unhandled exception", e);

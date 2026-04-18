@@ -25,7 +25,7 @@ public interface RepositoryLayer {
      * @param take пагинация - сколько документов вернуть на одной странице
      */
     @NonNull
-    List<VideoStatsItem> getVideos(Optional<String> skip, Optional<Integer> take);
+    List<VideoStatsItem> getVideos(Optional<Integer> skip, Optional<Integer> take);
 
     /**
      * @return данные всех сохранённых видео
