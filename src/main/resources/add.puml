@@ -16,10 +16,14 @@ else vk
     return view count
 end
 
-ServiceLayer -> RepositoryLayer : persist link + count
+ServiceLayer -> LinkRepository : LinkDto
+return boolean
+
+LinkRepository -> QueryExecutor : sql
 return boolean
 
 database PostgreSQL
-RepositoryLayer -> PostgreSQL : persist link + count
-return boolean
+
+QueryExecutor -> PostgreSQL : execute query
+return ResultSet
 @enduml

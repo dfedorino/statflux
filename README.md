@@ -25,6 +25,13 @@ Content views service for creators
     - youtube - слой взаимодействия с YouTube
 - service - слой бизнес логики
 - repository - слой взаимодействия с БД
+  - config - фабрика объектов
+  - constant - константы слоя
+  - datasource - абстракция соединения с БД
+  - dto - DTO
+  - exception - исключения слоя
+  - query - абстракции над исполнением запросов в БД
+  - LinkRepository - интерфейс доступа к хранимой сущности Link
 - Main.java - точка входа сервиса
 
 ## Основные задачи на хакатоне
