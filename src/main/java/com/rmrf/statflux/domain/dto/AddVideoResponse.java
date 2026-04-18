@@ -4,11 +4,11 @@ import lombok.NonNull;
 
 /**
  * @param hostingName иденитификатор хостинга
- * @param name        название видео
+ * @param title       название видео
  * @param rawUrl      полный url видео
  * @param views       количество просмотров
  */
-public record AddVideoResponse(@NonNull String hostingName, @NonNull String name,
+public record AddVideoResponse(@NonNull String hostingName, @NonNull String title,
                                @NonNull String rawUrl,
                                @NonNull Long views) {
 

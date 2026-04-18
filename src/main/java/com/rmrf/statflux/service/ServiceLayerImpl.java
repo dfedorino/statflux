@@ -54,7 +54,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                         hostingApi.hostingName(),
                         s.result().rawUrl(),
                         s.result().platformId(),
-                        s.result().name(),
+                        s.result().title(),
                         s.result().views());
                     if (!success) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
@@ -64,7 +64,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                     yield Success.of(
                         new AddVideoResponse(
                             hostingApi.hostingName(),
-                            s.result().name(),
+                            s.result().title(),
                             s.result().rawUrl(),
                             s.result().views()));
                 }
