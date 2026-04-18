@@ -10,8 +10,10 @@ import java.util.List;
 
 @Slf4j
 public record TelegramBotRootConsumer(Chain<TelegramBotContext> chain, TelegramClient telegramClient) implements LongPollingSingleThreadUpdateConsumer {
+
     @Override
     public void consume(Update update) {
+        log.debug("Raw update consumed: {}", update.getUpdateId());
         TelegramBotContext ctx = new TelegramBotContext(update, telegramClient);
         chain.accept(ctx);
     }
