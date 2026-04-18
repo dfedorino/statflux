@@ -61,7 +61,12 @@ public class ServiceLayerImpl implements ServiceLayer {
                         yield Failure.of(
                             new InternalTechErrorException("failed to save metadata to repo"));
                     }
-                    yield Success.of(new AddVideoResponse(hostingApi.hostingName()));
+                    yield Success.of(
+                        new AddVideoResponse(
+                            hostingApi.hostingName(),
+                            s.result().name(),
+                            s.result().rawUrl(),
+                            s.result().views()));
                 }
                 case Failure<LinkMetadataResponse> f -> {
                     log.error("ServiceLayerImpl[addVideo] failed to parse rawUrl={} reason={}",
