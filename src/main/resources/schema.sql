@@ -10,3 +10,13 @@ CREATE TABLE IF NOT EXISTS links
     updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(hosting_name,hosting_id)
 );
+
+CREATE TABLE IF NOT EXISTS pagination_state (
+    chat_id         BIGINT NOT NULL,
+    message_id      BIGINT NOT NULL,
+    first_seen_id   BIGINT,
+    last_seen_id    BIGINT,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (chat_id, message_id)
+);

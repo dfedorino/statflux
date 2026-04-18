@@ -14,4 +14,10 @@ public interface LinkRepository {
 
     long getTotalViewSum();
 
+    List<LinkDto> findFirstPage(int limit);
+
+    List<LinkDto> findNextPage(long lastSeenId, int limit);
+
+    List<LinkDto> findPreviousPage(long firstSeenId, int limit);
+
 }

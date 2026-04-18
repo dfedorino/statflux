@@ -2,33 +2,16 @@ package com.rmrf.statflux.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rmrf.statflux.repository.config.RepositoryConfig;
-import com.rmrf.statflux.repository.datasource.DataSource;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class LinkRepositoryIT {
+public class LinkRepositoryIT extends BaseRepositoryTest{
 
-    protected RepositoryConfig repositoryConfig;
-    protected DataSource dataSource;
     private LinkRepository linkRepository;
-
-    @BeforeEach
-    void setUp() {
-        repositoryConfig = new RepositoryConfig();
-        dataSource = repositoryConfig.dataSource();
-        repositoryConfig.sqlScriptRunner().run("schema.sql");
-    }
-
-    @AfterEach
-    void tearDown() {
-        dataSource.close();
-    }
 
     @BeforeEach
     public void setup() {
@@ -42,22 +25,30 @@ public class LinkRepositoryIT {
             .now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        LinkDto link = new LinkDto(
+        assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
             "My video",
             1000L,
             now
-        );
-        assertThat(linkRepository.save(link)).isTrue();
+        ))).isTrue();
 
         var links = linkRepository.findAll();
 
         assertThat(links)
             .hasSize(1)
             .first()
-            .isEqualTo(link);
+            .isEqualTo(new LinkDto(
+                1L,
+                "YouTube",
+                "https://youtube.com/v/123",
+                "123",
+                "My video",
+                1000L,
+                now
+            ));
     }
 
     @Test
@@ -66,42 +57,50 @@ public class LinkRepositoryIT {
         ZonedDateTime initialUpdate = ZonedDateTime.now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        LinkDto initial = new LinkDto(
+        assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
             "My video",
             1000L,
             initialUpdate
-        );
-        assertThat(linkRepository.save(initial)).isTrue();
+        ))).isTrue();
 
         ZonedDateTime update = ZonedDateTime.now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        LinkDto updated = new LinkDto(
+        assertThat(linkRepository.save(new LinkDto(
+            1L,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
             "My video",
             1005L,
             update
-        );
-
-        assertThat(linkRepository.save(updated)).isTrue();
+        ))).isTrue();
 
         var links = linkRepository.findAll();
 
         assertThat(links)
             .hasSize(1)
             .first()
-            .isEqualTo(updated);
+            .isEqualTo(new LinkDto(
+                1L,
+                "YouTube",
+                "https://youtube.com/v/123",
+                "123",
+                "My video",
+                1005L,
+                update
+            ));
     }
 
     @Test
     void should_get_total_links() {
 
         assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -111,6 +110,7 @@ public class LinkRepositoryIT {
         ))).isTrue();
 
         assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/456",
             "456",
@@ -132,6 +132,7 @@ public class LinkRepositoryIT {
     void should_get_total_views() {
 
         assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -141,6 +142,7 @@ public class LinkRepositoryIT {
         ))).isTrue();
 
         assertThat(linkRepository.save(new LinkDto(
+            null,
             "YouTube",
             "https://youtube.com/v/456",
             "456",
@@ -156,5 +158,232 @@ public class LinkRepositoryIT {
 
         assertThat(linkRepository.getTotalViewSum())
             .isEqualTo(1500L);
+    }
+
+    @Test
+    void should_get_first_page() {
+
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+
+        TestDataFactory.insertLinks(linkRepository, now, 3);
+
+        var actual = linkRepository.findFirstPage(2);
+
+        assertThat(actual)
+            .hasSize(2)
+            .containsExactly(
+                new LinkDto(
+                    1L,
+                    "YouTube",
+                    "https://youtube.com/v/1",
+                    "1",
+                    "My video 1",
+                    1000L,
+                    now
+                ),
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                )
+            );
+    }
+
+    @Test
+    void should_get_first_page_when_no_videos() {
+        var actual = linkRepository.findFirstPage(5);
+        assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void should_get_first_page_when_less_than_limit_videos() {
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+        TestDataFactory.insertLinks(linkRepository, now, 3);
+        var actual = linkRepository.findFirstPage(5);
+        assertThat(actual)
+            .hasSize(3)
+            .containsExactly(
+                new LinkDto(
+                    1L,
+                    "YouTube",
+                    "https://youtube.com/v/1",
+                    "1",
+                    "My video 1",
+                    1000L,
+                    now
+                ),
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                ),
+                new LinkDto(
+                    3L,
+                    "YouTube",
+                    "https://youtube.com/v/3",
+                    "3",
+                    "My video 3",
+                    3000L,
+                    now
+                )
+            );
+    }
+
+    @Test
+    void should_get_next_page() {
+
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+
+        TestDataFactory.insertLinks(linkRepository, now, 3);
+
+        var actual = linkRepository.findNextPage(1, 2);
+
+        assertThat(actual)
+            .hasSize(2)
+            .containsExactly(
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                ),
+                new LinkDto(
+                    3L,
+                    "YouTube",
+                    "https://youtube.com/v/3",
+                    "3",
+                    "My video 3",
+                    3000L,
+                    now
+                )
+            );
+    }
+
+    @Test
+    void should_get_next_page_when_less_limit_videos() {
+
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+
+        TestDataFactory.insertLinks(linkRepository, now, 4);
+
+        var actual = linkRepository.findNextPage(1, 5);
+
+        assertThat(actual)
+            .hasSize(3)
+            .containsExactly(
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                ),
+                new LinkDto(
+                    3L,
+                    "YouTube",
+                    "https://youtube.com/v/3",
+                    "3",
+                    "My video 3",
+                    3000L,
+                    now
+                ),
+                new LinkDto(
+                    4L,
+                    "YouTube",
+                    "https://youtube.com/v/4",
+                    "4",
+                    "My video 4",
+                    4000L,
+                    now
+                )
+            );
+    }
+
+    @Test
+    void should_get_previous_page() {
+
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+
+        TestDataFactory.insertLinks(linkRepository, now, 3);
+
+        var actual = linkRepository.findPreviousPage(3, 2);
+
+        assertThat(actual)
+            .hasSize(2)
+            .containsExactly(
+                new LinkDto(
+                    1L,
+                    "YouTube",
+                    "https://youtube.com/v/1",
+                    "1",
+                    "My video 1",
+                    1000L,
+                    now
+                ),
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                )
+            );
+    }
+
+    @Test
+    void should_get_previous_page_when_less_limit_videos() {
+
+        var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+
+        TestDataFactory.insertLinks(linkRepository, now, 4);
+
+        var actual = linkRepository.findPreviousPage(4, 5);
+
+        assertThat(actual)
+            .hasSize(3)
+            .containsExactly(
+                new LinkDto(
+                    1L,
+                    "YouTube",
+                    "https://youtube.com/v/1",
+                    "1",
+                    "My video 1",
+                    1000L,
+                    now
+                ),
+                new LinkDto(
+                    2L,
+                    "YouTube",
+                    "https://youtube.com/v/2",
+                    "2",
+                    "My video 2",
+                    2000L,
+                    now
+                ),
+                new LinkDto(
+                    3L,
+                    "YouTube",
+                    "https://youtube.com/v/3",
+                    "3",
+                    "My video 3",
+                    3000L,
+                    now
+                )
+            );
     }
 }
