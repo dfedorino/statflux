@@ -52,7 +52,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 case Success<LinkMetadataResponse> s -> {
                     var success = repositoryLayer.save(
                         hostingApi.hostingName(),
-                        rawUrl,
+                        s.result().rawUrl(),
                         s.result().platformId(),
                         s.result().name(),
                         s.result().views());
