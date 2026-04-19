@@ -1,8 +1,8 @@
 package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
-import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
-import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
+import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
+import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
@@ -15,6 +15,7 @@ import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.dto.LinkDto;
+import com.rmrf.statflux.repository.transaction.Transactional;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -56,6 +57,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<AddVideoResponse> addVideo(@NonNull String rawUrl) {
         try {
             var hostingApiEither = hostingApiFactory.forUrl(rawUrl);
@@ -64,12 +66,12 @@ public class ServiceLayerImpl implements ServiceLayer {
                 return hostingApiEither.asFailure().swap();
             }
             var hostingApi = hostingApiEither.get();
-            return switch (hostingApi.metadataByLink(rawUrl)) {
-                case Success<LinkMetadataResponse> s -> {
+            return switch (hostingApi.metadataById(rawUrl)) {
+                case Success<VideoMetadataResponse> s -> {
                     var dbItem = new LinkDto(
                         null,
                         hostingApi.hostingName(),
-                        s.result().rawUrl(),
+                        rawUrl,
                         s.result().id(),
                         s.result().title(),
                         s.result().views(),
@@ -85,10 +87,10 @@ public class ServiceLayerImpl implements ServiceLayer {
                         new AddVideoResponse(
                             hostingApi.hostingName(),
                             s.result().title(),
-                            s.result().rawUrl(),
+                            rawUrl,
                             s.result().views()));
                 }
-                case Failure<LinkMetadataResponse> f -> {
+                case Failure<VideoMetadataResponse> f -> {
                     log.error("ServiceLayerImpl[addVideo] failed to parse rawUrl={} reason={}",
                         rawUrl,
                         f.exception().getMessage());
@@ -102,6 +104,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
@@ -116,7 +119,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             paginationStateRepository.save(state);
 
             var responseItems = items.stream()
-                .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
+                .map(l -> new VideoStatsItem(l.hostingId(), l.title(), l.rawLink(), l.views(),
                     l.updatedAt()))
                 .toList();
             var hasMore = totalLinks > items.size();
@@ -132,6 +135,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<VideoStatsResponse> getNextVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
@@ -177,6 +181,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
@@ -233,6 +238,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback) {
         // TODO: переписать с использованием metadataByIds
@@ -247,7 +253,7 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
-            var videos = linkRepository.findAll();
+            var videos = linkRepository.findAllForUpdate();
             var hasErrors = false;
             for (int i = 0; i < videos.size(); i++) {
                 var video = videos.get(i);

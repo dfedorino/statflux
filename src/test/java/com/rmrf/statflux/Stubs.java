@@ -1,6 +1,6 @@
 package com.rmrf.statflux;
 
-import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
+import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.integration.vk.VkHostingApi;
 import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
 import com.rmrf.statflux.domain.result.Result;
@@ -11,12 +11,17 @@ public class Stubs {
 
     public static final YouTubeHostingApi youtubeStub = new YouTubeHostingApi() {
         @Override
-        public @NonNull Result<LinkMetadataResponse> metadataByLink(String rawLink) {
+        public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public @NonNull Result<List<LinkMetadataResponse>> metadataByIds(List<String> ids) {
+        public @NonNull Result<VideoMetadataResponse> metadataById(String id) {
+            return null;
+        }
+
+        @Override
+        public @NonNull Result<List<VideoMetadataResponse>> metadataByIds(List<String> ids) {
             throw new UnsupportedOperationException();
         }
 
@@ -28,12 +33,17 @@ public class Stubs {
 
     public static final VkHostingApi vkStub = new VkHostingApi() {
         @Override
-        public @NonNull Result<LinkMetadataResponse> metadataByLink(String rawLink) {
+        public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public @NonNull Result<List<LinkMetadataResponse>> metadataByIds(List<String> ids) {
+        public @NonNull Result<VideoMetadataResponse> metadataById(String id) {
+            return null;
+        }
+
+        @Override
+        public @NonNull Result<List<VideoMetadataResponse>> metadataByIds(List<String> ids) {
             throw new UnsupportedOperationException();
         }
 

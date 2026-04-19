@@ -32,6 +32,9 @@ public final class LinkSql {
     public static final String FIND_ALL =
         "SELECT * FROM links";
 
+    public static final String FIND_ALL_FOR_UPDATE =
+        "SELECT * FROM links FOR UPDATE";
+
     public static final String GET_TOTAL_VIEW_SUM =
         "SELECT sum(views) FROM links";
 

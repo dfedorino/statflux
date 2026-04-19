@@ -1,12 +1,15 @@
 package com.rmrf.statflux.integration;
 
+import com.rmrf.statflux.domain.constant.Platform;
 import com.rmrf.statflux.domain.exceptions.BadUrlException;
+import com.rmrf.statflux.domain.exceptions.UnsupportedPlatform;
 import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
 import com.rmrf.statflux.integration.vk.VkHostingApi;
 import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
+import com.rmrf.statflux.integration.youtube.YouTubeUrlParser;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +26,11 @@ public class HostingApiFactory {
 
     public Result<HostingApi> forUrl(String rawUrl) {
         try {
-            var host = URI.create(rawUrl).getHost().toLowerCase();
-            if (host.contains("youtube") || host.contains("youtu.be")) {
+            if (YouTubeUrlParser.isValidYouTubeUrl(rawUrl)) {
                 return Success.of(youTubeHostingApi);
             }
+
+            var host = URI.create(rawUrl).getHost().toLowerCase();
             if (host.contains("vkvideo") || host.contains("vk.com") || host.contains("vk.ru")) {
                 return Success.of(vkHostingApi);
             }
@@ -35,5 +39,17 @@ public class HostingApiFactory {
             log.error("HostingApiFactory[forUrl] uncaught exception rawUrl={}", rawUrl, e);
             return Failure.of(new BadUrlException(rawUrl));
         }
+    }
+
+    public Result<HostingApi> forUrl(Platform platform) {
+        if (platform == Platform.YOUTUBE) {
+            return Success.of(youTubeHostingApi);
+        }
+
+        if (platform == Platform.VK) {
+            return Success.of(vkHostingApi);
+        }
+
+        return Failure.of(new UnsupportedPlatform("Unsupported platform!"));
     }
 }

@@ -10,6 +10,10 @@ import lombok.experimental.UtilityClass;
 public class TestDataFactory {
 
     public static void insertLinks(LinkRepository linkRepository, ZonedDateTime now, int amount) {
+        insertLinks(linkRepository, 1000L, now, amount);
+    }
+
+    public static void insertLinks(LinkRepository linkRepository, long views, ZonedDateTime now, int amount) {
         for (int i = 1; i <= amount; i++) {
             assertThat(linkRepository.save(new LinkDto(
                 null,
@@ -17,7 +21,7 @@ public class TestDataFactory {
                 "https://youtube.com/v/" + i,
                 "" + i,
                 "My video " + i,
-                1000L * i,
+                views,
                 now
             ))).isTrue();
         }

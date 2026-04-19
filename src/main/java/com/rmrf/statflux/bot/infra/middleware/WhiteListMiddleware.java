@@ -17,15 +17,18 @@ public class WhiteListMiddleware implements Chain.Node<TelegramBotContext> {
 
     @Override
     public void handle(TelegramBotContext ctx, Consumer<TelegramBotContext> next) {
+        if (!ctx.update().hasMessage()) {
+            next.accept(ctx);
+            return;
+        }
+
         log.debug("Filtering");
-        if (ctx.update().hasMessage()) {
-            String username = ctx.update().getMessage().getFrom().getUserName();
-            if (allowedUsernames.contains(username)) {
-                log.info(String.format("User '%s' was verified successfully", username));
-                next.accept(ctx);
-            } else {
-                log.debug(String.format("User '%s' is not in white list", username));
-            }
+        String username = ctx.update().getMessage().getFrom().getUserName();
+        if (allowedUsernames.contains(username)) {
+            log.info(String.format("User '%s' was verified successfully", username));
+            next.accept(ctx);
+        } else {
+            log.debug(String.format("User '%s' is not in white list", username));
         }
     }
 }

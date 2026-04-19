@@ -1,0 +1,14 @@
+start:
+  greeting: 'Привет, пришли мне ссылку на видео для сбора статистики (YouTube, Rutube)'
+stats:
+  noVideos: 'У вас пока нет добавленных видео'
+  introduction: 'Добрый день\! Вот просмотры на сегодня:'
+  totalViews: 'Общее количество просмотров:'
+  totalLinkCount: 'Общее количество ссылок:'
+  refresh: 'Обновить'
+link:
+  videoStatistics: 'Статистика по видео:'
+  statsMotivationText: 'Для просмотра статистики по всем видео отправь /stats'
+  incorrect: 'Некорректная ссылка (поддерживаются только ссылки вида https://youtube.com, https://rutube.ru)'
+common:
+  useKnownCommands: 'Я могу добавить ссылку на YouTube/Rutube или выполнить одну из доступных команд'
