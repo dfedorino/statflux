@@ -2,6 +2,7 @@ package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
+import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
@@ -12,11 +13,13 @@ import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
+import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.dto.LinkDto;
+import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import java.time.ZonedDateTime;
-import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +28,20 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ServiceLayerImpl implements ServiceLayer {
 
-    private final LinkRepository repositoryLayer;
+    private final LinkRepository linkRepository;
+    private final PaginationStateRepository paginationStateRepository;
     private final HostingApiFactory hostingApiFactory;
     private final long refreshDelayMs;
 
     private final Semaphore refreshSemaphore;
 
-    public ServiceLayerImpl(LinkRepository linkRepository, HostingApiFactory hostingApiFactory,
+    private static final int ITEMS_PER_PAGE_TEMP = 20;
+
+    public ServiceLayerImpl(LinkRepository linkRepository,
+        PaginationStateRepository paginationStateRepository, HostingApiFactory hostingApiFactory,
         long refreshDelayMs) {
-        this.repositoryLayer = linkRepository;
+        this.linkRepository = linkRepository;
+        this.paginationStateRepository = paginationStateRepository;
         this.hostingApiFactory = hostingApiFactory;
         if (refreshDelayMs <= 0) {
             throw new IllegalArgumentException("refreshDelayMs must be positive");
@@ -62,7 +70,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                         s.result().views(),
                         ZonedDateTime.now()
                     );
-                    var success = repositoryLayer.save(dbItem);
+                    var success = linkRepository.save(dbItem);
                     if (!success) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
                         yield Failure.of(
@@ -89,32 +97,124 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
-    public @NonNull Result<VideoStatsResponse> getVideos(Optional<Integer> skip,
-        Optional<Integer> take) {
+    public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
+        @NonNull Long messageId) {
         try {
-            var items = repositoryLayer.findAll();
-            var totalLinks = repositoryLayer.getTotalLinkCount();
-            var totalViews = repositoryLayer.getTotalViewSum();
+            var items = linkRepository.findFirstPage(ITEMS_PER_PAGE_TEMP);
+            var totalLinks = linkRepository.getTotalLinkCount();
+            var totalViews = linkRepository.getTotalViewSum();
+
+            var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
+            var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+            var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
+                ZonedDateTime.now());
+            paginationStateRepository.save(state);
+
             var responseItems = items.stream()
                 .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
                     l.updatedAt()))
                 .toList();
             var hasMore = totalLinks > items.size();
-            var hasPrev = skip.filter(s -> s > 0).isPresent();
-            var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
+            var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
                 totalViews);
             return Success.of(resp);
         } catch (Throwable e) {
-            log.error("ServiceLayerImpl[getVideos] unhandled exception", e);
+            log.error(
+                "UserSessionServiceImpl[getVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
             return Failure.of(e);
         }
     }
 
     @Override
-    public void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback) {
+    public @NonNull Result<VideoStatsResponse> getNextVideos(@NonNull Long userId,
+        @NonNull Long messageId) {
+        try {
+            return updateOrInitSession(userId, messageId, paginationState -> {
+                var items = linkRepository.findNextPage(paginationState.lastSeenId(),
+                    ITEMS_PER_PAGE_TEMP);
+                var totalLinks = linkRepository.getTotalLinkCount();
+                var totalViews = linkRepository.getTotalViewSum();
+
+                var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
+                var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+
+                var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
+                    ZonedDateTime.now());
+                paginationStateRepository.save(state);
+
+                var responseItems = items.stream()
+                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
+                        l.updatedAt()))
+                    .toList();
+                var hasMore = totalLinks > items.size();
+                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, true,
+                    totalViews);
+                return Success.of(resp);
+
+            });
+        } catch (Throwable e) {
+            log.error(
+                "UserSessionServiceImpl[getNextVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
+            return Failure.of(e);
+        }
+    }
+
+    @Override
+    public @NonNull Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId,
+        @NonNull Long messageId) {
+        try {
+            return updateOrInitSession(userId, messageId, paginationState -> {
+                var items = linkRepository.findPreviousPage(paginationState.firstSeenId(),
+                    ITEMS_PER_PAGE_TEMP);
+                var totalLinks = linkRepository.getTotalLinkCount();
+                var totalViews = linkRepository.getTotalViewSum();
+
+                var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
+                var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+
+                var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
+                    ZonedDateTime.now());
+                paginationStateRepository.save(state);
+
+                var responseItems = items.stream()
+                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
+                        l.updatedAt()))
+                    .toList();
+                var hasMore = totalLinks > items.size();
+                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
+                    totalViews);
+                return Success.of(resp);
+            });
+        } catch (Throwable e) {
+            log.error(
+                "UserSessionServiceImpl[getPreviousVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
+            return Failure.of(e);
+        }
+    }
+
+    private @NonNull Result<VideoStatsResponse> updateOrInitSession(Long userId, Long messageId,
+        Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
+        var maybePaginationState = paginationStateRepository.find(userId, messageId);
+        if (maybePaginationState.isEmpty()) {
+            log.info(
+                "UserSessionServiceImpl[updateOrInitSession] userId={} messageId={} session not found",
+                userId, messageId);
+            return getVideos(userId, messageId);
+        }
+        var paginationState = maybePaginationState.get();
+        return f.apply(paginationState);
+    }
+
+    @Override
+    public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
+        Consumer<Result<RefreshVideosPagedResponse>> callback) {
         // TODO: переписать с использованием metadataByIds
-        final Consumer<Result<RefreshVideosResponse>> cb = callback != null ? callback : result -> {
-        };
+        final Consumer<Result<RefreshVideosPagedResponse>> cb =
+            callback != null ? callback : result -> {
+            };
 
         if (!refreshSemaphore.tryAcquire()) {
             cb.accept(Failure.of(new RefreshInProgressException(
@@ -123,7 +223,7 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
-            var videos = repositoryLayer.findAll();
+            var videos = linkRepository.findAll();
             var hasErrors = false;
             for (int i = 0; i < videos.size(); i++) {
                 var video = videos.get(i);
@@ -142,11 +242,29 @@ public class ServiceLayerImpl implements ServiceLayer {
                     hasErrors = true;
                 }
             }
-            cb.accept(Success.of(new RefreshVideosResponse(hasErrors)));
+            var paginationState = paginationStateRepository.find(userId, messageId);
+            var firstSeenId =
+                paginationState.isPresent() ? paginationState.get().firstSeenId() : 0L;
+            var items = linkRepository.findNextPage(firstSeenId, ITEMS_PER_PAGE_TEMP);
+            var totalVideos = linkRepository.getTotalLinkCount();
+            var totalViews = linkRepository.getTotalViewSum();
+            var responseItems = items.stream()
+                .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
+                    l.views(),
+                    l.updatedAt()))
+                .toList();
+            var hasNext = responseItems.size() < totalVideos;
+            var hasPrev = firstSeenId > 0;
+            var response = new RefreshVideosPagedResponse(responseItems, totalVideos,
+                hasNext,
+                hasPrev, totalViews, hasErrors);
+            cb.accept(Success.of(response));
             refreshSemaphore.release();
         });
         workerThread.setUncaughtExceptionHandler((tr, e) -> {
-            log.error("ServiceLayerImpl[refreshVideos] unhandled exception in worker thread", e);
+            log.error(
+                "ServiceLayerImpl[refreshVideos] userId={} messageId={} unhandled exception in worker thread",
+                userId, messageId, e);
             cb.accept(Failure.of(e));
             refreshSemaphore.release();
         });

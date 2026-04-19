@@ -1,6 +1,7 @@
 package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
+import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.result.Result;
@@ -18,17 +19,14 @@ public interface ServiceLayer {
     @NonNull
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
-    /**
-     * @param skip пагинация - сколько документов пропустить
-     * @param take пагинация - сколько документов вернуть на одной странице
-     */
     @NonNull
-    Result<VideoStatsResponse> getVideos(Optional<Integer> skip, Optional<Integer> take);
+    Result<VideoStatsResponse> getVideos(@NonNull Long userId, @NonNull Long messageId);
 
     @NonNull
-    default Result<VideoStatsResponse> getVideos() {
-        return getVideos(Optional.empty(), Optional.empty());
-    }
+    Result<VideoStatsResponse> getNextVideos(@NonNull Long userId, @NonNull Long messageId);
+
+    @NonNull
+    Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId, @NonNull Long messageId);
 
     /**
      * Запуск асинхронного процесса обновления метаданных видео. Результат обновления возвращается
@@ -39,5 +37,6 @@ public interface ServiceLayer {
      *                 быть не обработаны из-за ошибок. Failure - процесс обновления полностью
      *                 завершился неуспехом
      */
-    void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback);
+    void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
+        Consumer<Result<RefreshVideosPagedResponse>> callback);
 }
