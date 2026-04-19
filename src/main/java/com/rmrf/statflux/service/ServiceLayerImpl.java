@@ -3,7 +3,6 @@ package com.rmrf.statflux.service;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
-import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
@@ -16,6 +15,7 @@ import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
@@ -32,21 +32,25 @@ public class ServiceLayerImpl implements ServiceLayer {
     private final PaginationStateRepository paginationStateRepository;
     private final HostingApiFactory hostingApiFactory;
     private final long refreshDelayMs;
+    private final int videosPerPage;
 
     private final Semaphore refreshSemaphore;
 
-    private static final int ITEMS_PER_PAGE_TEMP = 20;
-
     public ServiceLayerImpl(LinkRepository linkRepository,
         PaginationStateRepository paginationStateRepository, HostingApiFactory hostingApiFactory,
-        long refreshDelayMs) {
+        long refreshDelayMs, int videosPerPage) {
         this.linkRepository = linkRepository;
         this.paginationStateRepository = paginationStateRepository;
         this.hostingApiFactory = hostingApiFactory;
         if (refreshDelayMs <= 0) {
             throw new IllegalArgumentException("refreshDelayMs must be positive");
         }
+
         this.refreshDelayMs = refreshDelayMs;
+        if (videosPerPage <= 0) {
+            throw new IllegalArgumentException("videosPerPage must be positive");
+        }
+        this.videosPerPage = videosPerPage;
         refreshSemaphore = new Semaphore(1);
     }
 
@@ -68,7 +72,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                         s.result().id(),
                         s.result().title(),
                         s.result().views(),
-                        ZonedDateTime.now()
+                        ZonedDateTime.now(ZoneOffset.UTC)
                     );
                     var success = linkRepository.save(dbItem);
                     if (!success) {
@@ -100,14 +104,14 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            var items = linkRepository.findFirstPage(ITEMS_PER_PAGE_TEMP);
+            var items = linkRepository.findFirstPage(videosPerPage);
             var totalLinks = linkRepository.getTotalLinkCount();
             var totalViews = linkRepository.getTotalViewSum();
 
             var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
             var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
             var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
-                ZonedDateTime.now());
+                ZonedDateTime.now(ZoneOffset.UTC));
             paginationStateRepository.save(state);
 
             var responseItems = items.stream()
@@ -132,7 +136,7 @@ public class ServiceLayerImpl implements ServiceLayer {
         try {
             return updateOrInitSession(userId, messageId, paginationState -> {
                 var items = linkRepository.findNextPage(paginationState.lastSeenId(),
-                    ITEMS_PER_PAGE_TEMP);
+                    videosPerPage);
                 var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
 
@@ -140,7 +144,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
 
                 var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
-                    ZonedDateTime.now());
+                    ZonedDateTime.now(ZoneOffset.UTC));
                 paginationStateRepository.save(state);
 
                 var responseItems = items.stream()
@@ -167,7 +171,7 @@ public class ServiceLayerImpl implements ServiceLayer {
         try {
             return updateOrInitSession(userId, messageId, paginationState -> {
                 var items = linkRepository.findPreviousPage(paginationState.firstSeenId(),
-                    ITEMS_PER_PAGE_TEMP);
+                    videosPerPage);
                 var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
 
@@ -175,7 +179,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
 
                 var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
-                    ZonedDateTime.now());
+                    ZonedDateTime.now(ZoneOffset.UTC));
                 paginationStateRepository.save(state);
 
                 var responseItems = items.stream()
@@ -245,7 +249,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             var paginationState = paginationStateRepository.find(userId, messageId);
             var firstSeenId =
                 paginationState.isPresent() ? paginationState.get().firstSeenId() : 0L;
-            var items = linkRepository.findNextPage(firstSeenId, ITEMS_PER_PAGE_TEMP);
+            var items = linkRepository.findNextPage(firstSeenId, videosPerPage);
             var totalVideos = linkRepository.getTotalLinkCount();
             var totalViews = linkRepository.getTotalViewSum();
             var responseItems = items.stream()

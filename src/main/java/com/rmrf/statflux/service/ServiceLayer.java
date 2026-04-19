@@ -2,10 +2,8 @@ package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
-import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.result.Result;
-import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
 
@@ -19,12 +17,33 @@ public interface ServiceLayer {
     @NonNull
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
+    /**
+     * Получение списка видео и статистики для первой страницы
+     *
+     * @param userId    идентификатор текущего пользователя/чата
+     * @param messageId идентификатор текущего сообщения
+     * @return {@link VideoStatsResponse}
+     */
     @NonNull
     Result<VideoStatsResponse> getVideos(@NonNull Long userId, @NonNull Long messageId);
 
+    /**
+     * Получение списка видео и статистики для следующей страницы / переход на следующую страницу
+     *
+     * @param userId    идентификатор текущего пользователя/чата
+     * @param messageId идентификатор текущего сообщения
+     * @return {@link VideoStatsResponse}
+     */
     @NonNull
     Result<VideoStatsResponse> getNextVideos(@NonNull Long userId, @NonNull Long messageId);
 
+    /**
+     * Получение списка видео и статистики для следующей страницы / переход на следующую страницу
+     *
+     * @param userId    идентификатор текущего пользователя/чата
+     * @param messageId идентификатор текущего сообщения
+     * @return {@link VideoStatsResponse}
+     */
     @NonNull
     Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId, @NonNull Long messageId);
 
