@@ -13,7 +13,7 @@ import com.rmrf.statflux.repository.query.SqlScriptRunner;
 public class RepositoryConfig {
 
     public DataSource dataSource() {
-        return new SimpleDataSource(ConfigLoader.load("application.properties"));
+        return new SimpleDataSource(ConfigLoader.loadProperties("application.properties"));
     }
 
     public QueryExecutor queryExecutor() {
