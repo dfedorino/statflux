@@ -25,7 +25,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             .now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/123",
@@ -33,9 +33,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My video",
             1000L,
             now
-        ))).isTrue();
+        )))).isTrue();
 
-        var links = linkRepository.findAll();
+        var links = tx.execute(() -> linkRepository.findAll());
 
         assertThat(links)
             .hasSize(1)
@@ -57,7 +57,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
         ZonedDateTime initialUpdate = ZonedDateTime.now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/123",
@@ -65,12 +65,12 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My video",
             1000L,
             initialUpdate
-        ))).isTrue();
+        )))).isTrue();
 
         ZonedDateTime update = ZonedDateTime.now(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MICROS);
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             1L,
             "YouTube",
             "https://youtube.com/v/123",
@@ -78,9 +78,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My video",
             1005L,
             update
-        ))).isTrue();
+        )))).isTrue();
 
-        var links = linkRepository.findAll();
+        var links = tx.execute(() -> linkRepository.findAll());
 
         assertThat(links)
             .hasSize(1)
@@ -99,7 +99,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
     @Test
     void should_get_total_links() {
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/123",
@@ -107,9 +107,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My video",
             1000L,
             ZonedDateTime.now(ZoneOffset.UTC)
-        ))).isTrue();
+        )))).isTrue();
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/456",
@@ -117,21 +117,21 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My another video",
             500L,
             ZonedDateTime.now(ZoneOffset.UTC)
-        ))).isTrue();
+        )))).isTrue();
 
-        var links = linkRepository.findAll();
+        var links = tx.execute(() -> linkRepository.findAll());
 
         assertThat(links)
             .hasSize(2);
 
-        assertThat(linkRepository.getTotalLinkCount())
+        assertThat(tx.execute(() -> linkRepository.getTotalLinkCount()))
             .isEqualTo(2);
     }
 
     @Test
     void should_get_total_views() {
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/123",
@@ -139,9 +139,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My video",
             1000L,
             ZonedDateTime.now(ZoneOffset.UTC)
-        ))).isTrue();
+        )))).isTrue();
 
-        assertThat(linkRepository.save(new LinkDto(
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
             "YouTube",
             "https://youtube.com/v/456",
@@ -149,14 +149,14 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
             "My another video",
             500L,
             ZonedDateTime.now(ZoneOffset.UTC)
-        ))).isTrue();
+        )))).isTrue();
 
-        var links = linkRepository.findAll();
+        var links = tx.execute(() -> linkRepository.findAll());
 
         assertThat(links)
             .hasSize(2);
 
-        assertThat(linkRepository.getTotalViewSum())
+        assertThat(tx.execute(() -> linkRepository.getTotalViewSum()))
             .isEqualTo(1500L);
     }
 
@@ -165,9 +165,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
 
-        TestDataFactory.insertLinks(linkRepository, now, 3);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 3));
 
-        var actual = linkRepository.findFirstPage(2);
+        var actual = tx.execute(() -> linkRepository.findFirstPage(2));
 
         assertThat(actual)
             .hasSize(2)
@@ -187,7 +187,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 )
             );
@@ -195,15 +195,15 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
     @Test
     void should_get_first_page_when_no_videos() {
-        var actual = linkRepository.findFirstPage(5);
+        var actual = tx.execute(() -> linkRepository.findFirstPage(5));
         assertThat(actual).isEmpty();
     }
 
     @Test
     void should_get_first_page_when_less_than_limit_videos() {
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
-        TestDataFactory.insertLinks(linkRepository, now, 3);
-        var actual = linkRepository.findFirstPage(5);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 3));
+        var actual = tx.execute(() -> linkRepository.findFirstPage(5));
         assertThat(actual)
             .hasSize(3)
             .containsExactly(
@@ -222,7 +222,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 ),
                 new LinkDto(
@@ -231,7 +231,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/3",
                     "3",
                     "My video 3",
-                    3000L,
+                    1000L,
                     now
                 )
             );
@@ -242,9 +242,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
 
-        TestDataFactory.insertLinks(linkRepository, now, 3);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 3));
 
-        var actual = linkRepository.findNextPage(1, 2);
+        var actual= tx.execute(() ->  linkRepository.findNextPage(1, 2));
 
         assertThat(actual)
             .hasSize(2)
@@ -255,7 +255,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 ),
                 new LinkDto(
@@ -264,7 +264,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/3",
                     "3",
                     "My video 3",
-                    3000L,
+                    1000L,
                     now
                 )
             );
@@ -275,9 +275,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
 
-        TestDataFactory.insertLinks(linkRepository, now, 4);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 4));
 
-        var actual = linkRepository.findNextPage(1, 5);
+        var actual = tx.execute(() ->  linkRepository.findNextPage(1, 5));
 
         assertThat(actual)
             .hasSize(3)
@@ -288,7 +288,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 ),
                 new LinkDto(
@@ -297,7 +297,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/3",
                     "3",
                     "My video 3",
-                    3000L,
+                    1000L,
                     now
                 ),
                 new LinkDto(
@@ -306,7 +306,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/4",
                     "4",
                     "My video 4",
-                    4000L,
+                    1000L,
                     now
                 )
             );
@@ -317,9 +317,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
 
-        TestDataFactory.insertLinks(linkRepository, now, 3);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 3));
 
-        var actual = linkRepository.findPreviousPage(3, 2);
+        var actual = tx.execute(() -> linkRepository.findPreviousPage(3, 2));
 
         assertThat(actual)
             .hasSize(2)
@@ -339,7 +339,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 )
             );
@@ -350,9 +350,9 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
 
         var now = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
 
-        TestDataFactory.insertLinks(linkRepository, now, 4);
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, now, 4));
 
-        var actual = linkRepository.findPreviousPage(4, 5);
+        var actual = tx.execute(() -> linkRepository.findPreviousPage(4, 5));
 
         assertThat(actual)
             .hasSize(3)
@@ -372,7 +372,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/2",
                     "2",
                     "My video 2",
-                    2000L,
+                    1000L,
                     now
                 ),
                 new LinkDto(
@@ -381,7 +381,7 @@ public class LinkRepositoryIT extends BaseRepositoryTest{
                     "https://youtube.com/v/3",
                     "3",
                     "My video 3",
-                    3000L,
+                    1000L,
                     now
                 )
             );

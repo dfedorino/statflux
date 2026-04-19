@@ -13,6 +13,7 @@ import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.repository.dto.LinkDto;
+import com.rmrf.statflux.repository.transaction.Transactional;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
@@ -43,6 +44,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<AddVideoResponse> addVideo(@NonNull String rawUrl) {
         try {
             var hostingApiEither = hostingApiFactory.forUrl(rawUrl);
@@ -89,6 +91,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public @NonNull Result<VideoStatsResponse> getVideos(Optional<Integer> skip,
         Optional<Integer> take) {
         try {
@@ -96,7 +99,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             var totalLinks = repositoryLayer.getTotalLinkCount();
             var totalViews = repositoryLayer.getTotalViewSum();
             var responseItems = items.stream()
-                .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
+                .map(l -> new VideoStatsItem(l.hostingId(), l.title(), l.rawLink(), l.views(),
                     l.updatedAt()))
                 .toList();
             var hasMore = totalLinks > items.size();
@@ -111,6 +114,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
+    @Transactional
     public void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback) {
         // TODO: переписать с использованием metadataByIds
         final Consumer<Result<RefreshVideosResponse>> cb = callback != null ? callback : result -> {
@@ -123,7 +127,7 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
-            var videos = repositoryLayer.findAll();
+            var videos = repositoryLayer.findAllForUpdate();
             var hasErrors = false;
             for (int i = 0; i < videos.size(); i++) {
                 var video = videos.get(i);

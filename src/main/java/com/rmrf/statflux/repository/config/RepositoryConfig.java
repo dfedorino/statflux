@@ -6,30 +6,30 @@ import com.rmrf.statflux.repository.JdbcPaginationStateRepository;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.datasource.DataSource;
-import com.rmrf.statflux.repository.datasource.SimpleDataSource;
-import com.rmrf.statflux.repository.query.QueryExecutor;
-import com.rmrf.statflux.repository.query.SqlScriptRunner;
+import com.rmrf.statflux.repository.datasource.impl.PooledDataSource;
+import com.rmrf.statflux.repository.datasource.impl.SimpleDataSource;
+import com.rmrf.statflux.repository.transaction.TransactionManager;
 
 public class RepositoryConfig {
 
-    public DataSource dataSource() {
+    public DataSource simpleDataSource() {
         return new SimpleDataSource(ConfigLoader.loadProperties("application.properties"));
     }
 
-    public QueryExecutor queryExecutor() {
-        return new QueryExecutor(dataSource());
+    public DataSource pooledDataSource() {
+        return new PooledDataSource(ConfigLoader.loadProperties("application.properties"));
     }
 
-    public SqlScriptRunner sqlScriptRunner() {
-        return new SqlScriptRunner(queryExecutor());
+    public TransactionManager transactionManager(DataSource dataSource) {
+        return new TransactionManager(dataSource);
     }
 
     public LinkRepository linkRepository() {
-        return new JdbcLinkRepository(queryExecutor());
+        return new JdbcLinkRepository();
     }
 
     public PaginationStateRepository paginationStateRepository() {
-        return new JdbcPaginationStateRepository(queryExecutor());
+        return new JdbcPaginationStateRepository();
     }
 
 }

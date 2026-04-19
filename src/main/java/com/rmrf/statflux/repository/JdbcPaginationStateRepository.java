@@ -2,7 +2,7 @@ package com.rmrf.statflux.repository;
 
 import com.rmrf.statflux.repository.constant.PaginationStateSql;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
-import com.rmrf.statflux.repository.query.QueryExecutor;
+import com.rmrf.statflux.repository.util.Queries;
 import com.rmrf.statflux.repository.query.ResultSetMapper;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JdbcPaginationStateRepository implements PaginationStateRepository {
 
-    private final QueryExecutor executor;
     private static final ResultSetMapper<PaginationStateDto> PAGINATION_STATE_DTO_RESULT_SET_MAPPER =
         rs -> new PaginationStateDto(
             rs.getLong("chat_id"),
@@ -26,7 +25,7 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
 
     @Override
     public Optional<PaginationStateDto> find(@NonNull Long chatId, @NonNull Long messageId) {
-        return executor.query(
+        return Queries.query(
             PaginationStateSql.FIND,
             PAGINATION_STATE_DTO_RESULT_SET_MAPPER,
             chatId,
@@ -37,7 +36,7 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
     @Override
     public boolean save(PaginationStateDto state) {
 
-        int updated = executor.update(
+        int updated = Queries.update(
             PaginationStateSql.UPDATE,
             state.firstSeenId(),
             state.lastSeenId(),
@@ -47,7 +46,7 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
 
         );
 
-        return updated == 1 || executor.update(
+        return updated == 1 || Queries.update(
             PaginationStateSql.INSERT,
             state.chatId(),
             state.messageId(),
