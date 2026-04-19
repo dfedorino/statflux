@@ -34,6 +34,13 @@ Content views service for creators
     - UserSessionService - интерфейс, сервис отвечающий за управление пользовательской сессией, мост
       между ServiceLayer и фронтендом
 - repository - слой взаимодействия с БД
+  - config - фабрика объектов
+  - constant - константы слоя
+  - datasource - абстракция соединения с БД
+  - dto - DTO
+  - exception - исключения слоя
+  - query - абстракции над исполнением запросов в БД
+  - LinkRepository - интерфейс доступа к хранимой сущности Link
 - util - вспомогательные классы
 - Main.java - точка входа сервиса
 
