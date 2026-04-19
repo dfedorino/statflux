@@ -111,6 +111,7 @@ public class ServiceLayerImpl implements ServiceLayer {
 
     @Override
     public void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback) {
+        // TODO: переписать с использованием metadataByIds
         final Consumer<Result<RefreshVideosResponse>> cb = callback != null ? callback : result -> {
         };
 

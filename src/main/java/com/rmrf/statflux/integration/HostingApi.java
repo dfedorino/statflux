@@ -10,7 +10,8 @@ public interface HostingApi {
     @NonNull
     Result<LinkMetadataResponse> linkMetadata(String rawLink);
 
-    List<LinkMetadataResponse> metadataByIds(List<String> ids);
+    @NonNull
+    Result<List<LinkMetadataResponse>> metadataByIds(List<String> ids);
 
     @NonNull
     String hostingName();
