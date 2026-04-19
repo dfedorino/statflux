@@ -2,6 +2,7 @@ package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
+import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.result.Failure;
@@ -15,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class UserSessionServiceImpl implements UserSessionService {
@@ -61,7 +61,9 @@ public class UserSessionServiceImpl implements UserSessionService {
                 totalViews);
             return Success.of(resp);
         } catch (Throwable e) {
-            log.error("UserSessionServiceImpl[getVideos] unhandled exception", e);
+            log.error(
+                "UserSessionServiceImpl[getVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
             return Failure.of(e);
         }
     }
@@ -94,7 +96,9 @@ public class UserSessionServiceImpl implements UserSessionService {
 
             });
         } catch (Throwable e) {
-            log.error("UserSessionServiceImpl[getNextVideos] unhandled exception", e);
+            log.error(
+                "UserSessionServiceImpl[getNextVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
             return Failure.of(e);
         }
     }
@@ -126,7 +130,9 @@ public class UserSessionServiceImpl implements UserSessionService {
                 return Success.of(resp);
             });
         } catch (Throwable e) {
-            log.error("UserSessionServiceImpl[getPreviousVideos] unhandled exception", e);
+            log.error(
+                "UserSessionServiceImpl[getPreviousVideos] userId={} messageId={} unhandled exception",
+                userId, messageId, e);
             return Failure.of(e);
         }
     }
@@ -147,6 +153,38 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback) {
-        throw new NotImplementedException();
+        Consumer<Result<RefreshVideosResponse>> onRefresh = (refreshResp) -> {
+            switch (refreshResp) {
+                case Success<RefreshVideosResponse> s -> {
+                    try {
+                        var paginationState = paginationStateRepository.find(userId, messageId);
+                        var firstSeenId =
+                            paginationState.isPresent() ? paginationState.get().firstSeenId() : 0L;
+                        var items = linkRepository.findNextPage(firstSeenId, ITEMS_PER_PAGE_TEMP);
+                        var totalVideos = linkRepository.getTotalLinkCount();
+                        var totalViews = linkRepository.getTotalViewSum();
+                        var responseItems = items.stream()
+                            .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
+                                l.views(),
+                                l.updatedAt()))
+                            .toList();
+                        var hasNext = responseItems.size() < totalVideos;
+                        var hasPrev = firstSeenId > 0;
+                        var response = new RefreshVideosPagedResponse(responseItems, totalVideos,
+                            hasNext,
+                            hasPrev, totalViews, s.get().hasErrors());
+                        callback.accept(Success.of(response));
+                    } catch (Throwable e) {
+                        log.error(
+                            "UserSessionServiceImpl[refreshVideos] userId={} messageId={} unhandled exception",
+                            userId, messageId, e);
+                        callback.accept(Failure.of(e));
+                    }
+
+                }
+                case Failure<RefreshVideosResponse> f -> callback.accept(f.swap());
+            }
+        };
+        serviceLayer.refreshVideos(onRefresh);
     }
 }
