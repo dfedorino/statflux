@@ -1,7 +1,5 @@
 package com.rmrf.statflux.service;
 
-import static com.rmrf.statflux.Stubs.vkStub;
-import static com.rmrf.statflux.Stubs.youtubeStub;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,6 +17,7 @@ import com.rmrf.statflux.repository.BaseRepositoryTest;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.TestDataFactory;
+import com.rmrf.statflux.service.config.ServiceConfig;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,9 +25,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
+    private final ServiceConfig serviceConfig = new ServiceConfig();
+    private final HostingApiFactory mockHostingApiFactory = Mockito.mock(HostingApiFactory.class);
     private LinkRepository linkRepository;
     private PaginationStateRepository paginationStateRepository;
     private ServiceLayer serviceLayer;
@@ -42,8 +44,10 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
     public void setup() {
         linkRepository = repositoryConfig.linkRepository();
         paginationStateRepository = repositoryConfig.paginationStateRepository();
-        serviceLayer = new ServiceLayerImpl(linkRepository, paginationStateRepository,
-            new HostingApiFactory(youtubeStub, vkStub), 100L, VIDEOS_PER_PAGE);
+        serviceLayer = serviceConfig.serviceLayer(mockHostingApiFactory);
+
+        tx.executeWithoutResult(
+            () -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT));
     }
 
     @AfterEach
@@ -53,9 +57,8 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void getVideosReturnsFirstPagesAndInitsState() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
-
-        var maybePaginationState = paginationStateRepository.find(USER_ID, MESSAGE_ID);
+        var maybePaginationState = tx.execute(
+            () -> paginationStateRepository.find(USER_ID, MESSAGE_ID));
         assertTrue(maybePaginationState.isEmpty());
 
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
@@ -63,21 +66,21 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         assertFalse(resp.hasPrev());
         assertEquals(VIDEO_COUNT, resp.totalVideos());
 
-        var paginationState = paginationStateRepository.find(USER_ID, MESSAGE_ID).get();
+        var paginationState = tx.execute(
+            () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
         assertEquals(1, paginationState.firstSeenId());
         assertEquals(VIDEOS_PER_PAGE, paginationState.lastSeenId());
     }
 
     @Test
     public void getNextVideosReturnsNextPageAndAdvancesState() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
-
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
         assertEquals(VIDEO_COUNT, resp.totalVideos());
 
-        var paginationState = paginationStateRepository.find(USER_ID, MESSAGE_ID).get();
+        var paginationState = tx.execute(
+            () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
         assertEquals(1, paginationState.firstSeenId());
         assertEquals(VIDEOS_PER_PAGE, paginationState.lastSeenId());
 
@@ -98,14 +101,13 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void getPreviousVideosReturnsPreviousPageAndFallbacksState() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
-
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
         assertEquals(VIDEO_COUNT, resp.totalVideos());
 
-        var paginationState = paginationStateRepository.find(USER_ID, MESSAGE_ID).get();
+        var paginationState = tx.execute(
+            () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
         assertEquals(1, paginationState.firstSeenId());
         assertEquals(VIDEOS_PER_PAGE, paginationState.lastSeenId());
 
@@ -123,14 +125,13 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void getPreviousVideosReturnsHasPrevCorrectly() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
-
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
         assertEquals(VIDEO_COUNT, resp.totalVideos());
 
-        var paginationState = paginationStateRepository.find(USER_ID, MESSAGE_ID).get();
+        var paginationState = tx.execute(
+            () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
         assertEquals(1, paginationState.firstSeenId());
         assertEquals(VIDEOS_PER_PAGE, paginationState.lastSeenId());
 
@@ -152,7 +153,6 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void subsequentGetNextVideosReturnsHasNextCorrectly() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
         serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         VideoStatsResponse lastResp = null;
         for (int i = 0; i < (VIDEO_COUNT / VIDEOS_PER_PAGE) - 1; i++) {
@@ -168,7 +168,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void subsequentGetPreviousVideosReturnsHasPrevCorrectly() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
+//        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
         serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         var steps = (VIDEO_COUNT / VIDEOS_PER_PAGE) - 1;
         VideoStatsResponse lastResp = null;
@@ -188,7 +188,6 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void getNextVideosReturnsAnErrorWhenOverflowing() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
         serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         Result<VideoStatsResponse> lastResp = null;
         for (int i = 0; i < (VIDEO_COUNT / VIDEOS_PER_PAGE); i++) {
@@ -202,7 +201,6 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void getPrevVideosReturnsAnErrorWhenUnderflowing() {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
         serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         Result<VideoStatsResponse> lastResp = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID);
 
@@ -213,7 +211,6 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     @Test
     public void refreshReturnsCorrectPage() throws InterruptedException {
-        TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT);
         serviceLayer.getVideos(USER_ID, MESSAGE_ID);
         serviceLayer.getNextVideos(USER_ID, MESSAGE_ID);
         serviceLayer.getNextVideos(USER_ID, MESSAGE_ID);

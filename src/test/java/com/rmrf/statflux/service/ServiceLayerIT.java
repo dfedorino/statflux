@@ -60,7 +60,7 @@ public class ServiceLayerIT extends BaseRepositoryTest {
             )
         ));
 
-        var foundLinks = serviceLayer.getVideos(Optional.empty(), Optional.empty());
+        var foundLinks = serviceLayer.getVideos(1L, 2L);
 
         assertThat(foundLinks.isSuccess()).isTrue();
         var found = foundLinks.get();

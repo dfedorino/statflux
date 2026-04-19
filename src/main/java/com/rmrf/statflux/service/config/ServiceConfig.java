@@ -15,10 +15,13 @@ public class ServiceConfig {
     public ServiceLayer serviceLayer(HostingApiFactory hostingApiFactory) {
         Properties props = ConfigLoader.loadProperties("application.properties");
         String refreshDelayMs = props.getProperty("service.refreshDelayMs", "100");
+        String pageSize = props.getProperty("service.pageSize", "5");
         ServiceLayerImpl impl = new ServiceLayerImpl(
             repositoryConfig.linkRepository(),
+            repositoryConfig.paginationStateRepository(),
             hostingApiFactory,
-            Long.parseLong(refreshDelayMs));
+            Long.parseLong(refreshDelayMs),
+            Integer.parseInt(pageSize));
         return TransactionalProxy.create(impl,
             repositoryConfig.transactionManager(repositoryConfig.pooledDataSource())
         );
