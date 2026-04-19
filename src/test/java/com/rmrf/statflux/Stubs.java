@@ -11,7 +11,7 @@ public class Stubs {
 
     protected static final YouTubeHostingApi youtubeStub = new YouTubeHostingApi() {
         @Override
-        public @NonNull Result<LinkMetadataResponse> linkMetadata(String rawLink) {
+        public @NonNull Result<LinkMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
         }
 
@@ -28,7 +28,7 @@ public class Stubs {
 
     protected static final VkHostingApi vkStub = new VkHostingApi() {
         @Override
-        public @NonNull Result<LinkMetadataResponse> linkMetadata(String rawLink) {
+        public @NonNull Result<LinkMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
         }
 

@@ -8,7 +8,7 @@ import lombok.NonNull;
 public interface HostingApi {
 
     @NonNull
-    Result<LinkMetadataResponse> linkMetadata(String rawLink);
+    Result<LinkMetadataResponse> metadataByLink(String rawLink);
 
     @NonNull
     Result<List<LinkMetadataResponse>> metadataByIds(List<String> ids);
