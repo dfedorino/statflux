@@ -54,6 +54,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             return switch (hostingApi.metadataByLink(rawUrl)) {
                 case Success<LinkMetadataResponse> s -> {
                     var dbItem = new LinkDto(
+                        null,
                         hostingApi.hostingName(),
                         s.result().rawUrl(),
                         s.result().id(),
