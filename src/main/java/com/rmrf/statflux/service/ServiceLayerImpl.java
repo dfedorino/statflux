@@ -56,7 +56,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                     var dbItem = new LinkDto(
                         hostingApi.hostingName(),
                         s.result().rawUrl(),
-                        s.result().platformId(),
+                        s.result().id(),
                         s.result().title(),
                         s.result().views(),
                         ZonedDateTime.now()
