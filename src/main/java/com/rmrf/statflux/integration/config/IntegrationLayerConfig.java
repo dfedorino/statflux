@@ -1,9 +1,11 @@
 package com.rmrf.statflux.integration.config;
 
-import com.rmrf.statflux.integration.HostingApiFactory;
-import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
-import com.rmrf.statflux.integration.youtube.YouTubeHostingApiImpl;
+import com.rmrf.statflux.integration.VideoProviderFactory;
 import com.rmrf.statflux.integration.utils.SimpleHttpClient;
+import com.rmrf.statflux.integration.vk.VkVideoProvider;
+import com.rmrf.statflux.integration.vk.VkVideoProviderImpl;
+import com.rmrf.statflux.integration.youtube.YouTubeVideoProvider;
+import com.rmrf.statflux.integration.youtube.YouTubeVideoProviderImpl;
 
 /**
  * Конфигурация для слоя integration
@@ -11,24 +13,30 @@ import com.rmrf.statflux.integration.utils.SimpleHttpClient;
 public class IntegrationLayerConfig {
 
     private final SimpleHttpClient simpleHttpClient;
-    private final YouTubeHostingApi youTubeHostingApi;
-    private final HostingApiFactory hostingApiFactory;
+    private final YouTubeVideoProviderImpl youTubeVideoProvider;
+    private final VkVideoProvider vkVideoProvider;
+    private final VideoProviderFactory providerFactory;
 
     public IntegrationLayerConfig(IntegrationConfig config) {
         this.simpleHttpClient = new SimpleHttpClient(config.getTimeout());
-        this.youTubeHostingApi = new YouTubeHostingApiImpl(config.getApiKey(), simpleHttpClient);
-        this.hostingApiFactory = new HostingApiFactory(youTubeHostingApi, null);
+        this.youTubeVideoProvider = new YouTubeVideoProviderImpl(config.getApiKey(), simpleHttpClient);
+        this.vkVideoProvider = new VkVideoProviderImpl(config.getVkApiUrl(), config.getVkApiKey(), config.getVkApiVersion(), simpleHttpClient);
+        this.providerFactory = new VideoProviderFactory(youTubeVideoProvider, vkVideoProvider);
     }
 
     public SimpleHttpClient simpleHttpClient() {
         return simpleHttpClient;
     }
 
-    public YouTubeHostingApi youTubeHostingApi() {
-        return youTubeHostingApi;
+    public YouTubeVideoProvider youTubeVideoProvider() {
+        return youTubeVideoProvider;
     }
 
-    public HostingApiFactory hostingApiFactory() {
-        return hostingApiFactory;
+    public VkVideoProvider vkVideoProvider() {
+        return vkVideoProvider;
+    }
+
+    public VideoProviderFactory providerFactory() {
+        return providerFactory;
     }
 }

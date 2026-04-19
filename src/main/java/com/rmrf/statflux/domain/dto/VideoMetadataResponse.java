@@ -7,7 +7,10 @@ import lombok.NonNull;
  * @param title  название видео
  * @param views  количество просмотров
  */
-public record VideoMetadataResponse(@NonNull String id,
-                                    @NonNull String title, Long views) {
-
+public record VideoMetadataResponse(
+    @NonNull String id,
+    @NonNull String title,
+    Long views
+) {
+    //
 }

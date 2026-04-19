@@ -1,5 +1,6 @@
 package com.rmrf.statflux.integration.youtube;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -29,20 +30,20 @@ public class YouTubeHostingApiImplTest {
     private ObjectMapper objectMapper;
 
     @InjectMocks
-    private YouTubeHostingApiImpl youTubeApi;
+    private YouTubeVideoProviderImpl youTubeVideoProvider;
 
     private static final String TEST_API_KEY = "test-api-key";
 
     @BeforeEach
     void setUp() {
-        youTubeApi = new YouTubeHostingApiImpl(TEST_API_KEY, httpClient);
+        youTubeVideoProvider = new YouTubeVideoProviderImpl(TEST_API_KEY, httpClient);
     }
 
     @Test
     @DisplayName("metadataByIds should return failure when ids is null")
     void metadataByIds_ShouldReturnFailure_WhenIdsNull() {
-        Result<List<VideoMetadataResponse>> result = youTubeApi.metadataByIds(null);
-        assertTrue(result instanceof Failure, "Result should be Failure");
+        Result<List<VideoMetadataResponse>> result = youTubeVideoProvider.metadataByIds(null);
+        assertInstanceOf(Failure.class, result, "Result should be Failure");
     }
 
     @Test
@@ -50,7 +51,7 @@ public class YouTubeHostingApiImplTest {
     void metadataByIds_ShouldReturnFailure_WhenHttpFails() throws Exception {
         when(httpClient.get(anyString())).thenThrow(new RuntimeException("Network error"));
 
-        Result<List<VideoMetadataResponse>> result = youTubeApi.metadataByIds(List.of("test123"));
+        Result<List<VideoMetadataResponse>> result = youTubeVideoProvider.metadataByIds(List.of("test123"));
 
         assertTrue(result.isFailure());
         verify(httpClient, times(1)).get(anyString());
@@ -59,7 +60,7 @@ public class YouTubeHostingApiImplTest {
     @Test
     @DisplayName("metadataById should return failure when id is invalid")
     void metadataById_ShouldReturnFailure_WhenIdInvalid() {
-        Result<VideoMetadataResponse> result = youTubeApi.metadataById("invalid-id");
+        Result<VideoMetadataResponse> result = youTubeVideoProvider.metadataById("invalid-id");
         assertTrue(result.isFailure());
     }
 }

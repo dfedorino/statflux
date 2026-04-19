@@ -7,8 +7,8 @@ import com.rmrf.statflux.domain.exceptions.BadUrlException;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
-import com.rmrf.statflux.integration.youtube.dto.YouTubeApiResponse;
 import com.rmrf.statflux.integration.utils.SimpleHttpClient;
+import com.rmrf.statflux.integration.youtube.dto.YouTubeApiResponse;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -17,20 +17,20 @@ import lombok.extern.slf4j.Slf4j;
  * Реализация YouTubeHostingApi. Отвечает за получение данных видео с YouTube API
  */
 @Slf4j
-public class YouTubeHostingApiImpl implements YouTubeHostingApi {
+public class YouTubeVideoProviderImpl implements YouTubeVideoProvider {
 
     private static final String API_BASE_URL = "https://www.googleapis.com/youtube/v3/videos";
     private final String apiKey;
     private final SimpleHttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public YouTubeHostingApiImpl(String apiKey) {
+    public YouTubeVideoProviderImpl(String apiKey) {
         this.apiKey = apiKey;
         this.httpClient = new SimpleHttpClient();
         this.objectMapper = new ObjectMapper();
     }
 
-    public YouTubeHostingApiImpl(String apiKey, SimpleHttpClient httpClient) {
+    public YouTubeVideoProviderImpl(String apiKey, SimpleHttpClient httpClient) {
         this.apiKey = apiKey;
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();

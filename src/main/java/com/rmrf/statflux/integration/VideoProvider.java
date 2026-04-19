@@ -5,7 +5,7 @@ import com.rmrf.statflux.domain.result.Result;
 import java.util.List;
 import lombok.NonNull;
 
-public interface HostingApi {
+public interface VideoProvider {
 
     // использовать metadataById
     @Deprecated

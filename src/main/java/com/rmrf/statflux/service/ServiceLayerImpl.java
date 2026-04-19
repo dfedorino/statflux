@@ -7,11 +7,11 @@ import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
-import com.rmrf.statflux.integration.HostingApiFactory;
-import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
+import com.rmrf.statflux.integration.VideoProviderFactory;
+import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -26,12 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceLayerImpl implements ServiceLayer {
 
     private final LinkRepository repositoryLayer;
-    private final HostingApiFactory hostingApiFactory;
+    private final VideoProviderFactory hostingApiFactory;
     private final long refreshDelayMs;
 
     private final Semaphore refreshSemaphore;
 
-    public ServiceLayerImpl(LinkRepository linkRepository, HostingApiFactory hostingApiFactory,
+    public ServiceLayerImpl(LinkRepository linkRepository, VideoProviderFactory hostingApiFactory,
         long refreshDelayMs) {
         this.repositoryLayer = linkRepository;
         this.hostingApiFactory = hostingApiFactory;
