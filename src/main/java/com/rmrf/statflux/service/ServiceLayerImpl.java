@@ -6,6 +6,7 @@ import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
+import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.integration.HostingApiFactory;
 import com.rmrf.statflux.repository.LinkRepository;
@@ -109,7 +110,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             var totalViews = linkRepository.getTotalViewSum();
 
             var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
-            var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+            var lastSeenId = items.isEmpty() ? videosPerPage : items.getLast().id();
             var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
                 ZonedDateTime.now(ZoneOffset.UTC));
             paginationStateRepository.save(state);
@@ -135,13 +136,22 @@ public class ServiceLayerImpl implements ServiceLayer {
         @NonNull Long messageId) {
         try {
             return updateOrInitSession(userId, messageId, paginationState -> {
+                var totalLinks = linkRepository.getTotalLinkCount();
+
+                if (paginationState.lastSeenId() >= totalLinks) {
+                    log.error(
+                        "UserSessionServiceImpl[getNextVideos] userId={} messageId={} lastSeenId=${} pagination overflow",
+                        userId, messageId, paginationState.lastSeenId());
+                    return Failure.of(new PageIsOutsideOfBoundsException(
+                        "the last page has already been reached"));
+                }
+
                 var items = linkRepository.findNextPage(paginationState.lastSeenId(),
                     videosPerPage);
-                var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
 
                 var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
-                var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+                var lastSeenId = items.isEmpty() ? videosPerPage : items.getLast().id();
 
                 var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
                     ZonedDateTime.now(ZoneOffset.UTC));
@@ -151,8 +161,9 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
                         l.updatedAt()))
                     .toList();
-                var hasMore = totalLinks > items.size();
-                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, true,
+                var hasMore = lastSeenId < totalLinks;
+                var hasPrev = firstSeenId > 1;
+                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
 
@@ -170,13 +181,21 @@ public class ServiceLayerImpl implements ServiceLayer {
         @NonNull Long messageId) {
         try {
             return updateOrInitSession(userId, messageId, paginationState -> {
+                if (paginationState.firstSeenId() <= 1) {
+                    log.error(
+                        "UserSessionServiceImpl[getPreviousVideos] userId={} messageId={} lastSeenId=${} pagination underflow",
+                        userId, messageId, paginationState.lastSeenId());
+                    return Failure.of(new PageIsOutsideOfBoundsException(
+                        "attempted to access a page with negative number"));
+                }
+
                 var items = linkRepository.findPreviousPage(paginationState.firstSeenId(),
                     videosPerPage);
                 var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
 
                 var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
-                var lastSeenId = items.isEmpty() ? 0 : items.getLast().id();
+                var lastSeenId = items.isEmpty() ? videosPerPage : items.getLast().id();
 
                 var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
                     ZonedDateTime.now(ZoneOffset.UTC));
@@ -186,8 +205,9 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
                         l.updatedAt()))
                     .toList();
-                var hasMore = totalLinks > items.size();
-                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
+                var hasMore = lastSeenId < totalLinks;
+                var hasPrev = firstSeenId > 1;
+                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
             });
@@ -246,20 +266,23 @@ public class ServiceLayerImpl implements ServiceLayer {
                     hasErrors = true;
                 }
             }
-            var paginationState = paginationStateRepository.find(userId, messageId);
+            var maybePaginationState = paginationStateRepository.find(userId, messageId);
             var firstSeenId =
-                paginationState.isPresent() ? paginationState.get().firstSeenId() : 0L;
-            var items = linkRepository.findNextPage(firstSeenId, videosPerPage);
-            var totalVideos = linkRepository.getTotalLinkCount();
+                maybePaginationState.isPresent() ? maybePaginationState.get().firstSeenId() : 0L;
+            var lastSeenId =
+                maybePaginationState.isPresent() ? maybePaginationState.get().lastSeenId()
+                    : videosPerPage;
+            var items = linkRepository.findNextPage(firstSeenId - 1, videosPerPage);
+            var totalLinks = linkRepository.getTotalLinkCount();
             var totalViews = linkRepository.getTotalViewSum();
             var responseItems = items.stream()
                 .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
                     l.views(),
                     l.updatedAt()))
                 .toList();
-            var hasNext = responseItems.size() < totalVideos;
-            var hasPrev = firstSeenId > 0;
-            var response = new RefreshVideosPagedResponse(responseItems, totalVideos,
+            var hasNext = lastSeenId < totalLinks;
+            var hasPrev = firstSeenId > 1;
+            var response = new RefreshVideosPagedResponse(responseItems, totalLinks,
                 hasNext,
                 hasPrev, totalViews, hasErrors);
             cb.accept(Success.of(response));
