@@ -16,6 +16,7 @@ import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import com.rmrf.statflux.repository.transaction.Transactional;
+import com.rmrf.statflux.repository.transaction.TransactionManager;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -32,6 +33,7 @@ public class ServiceLayerImpl implements ServiceLayer {
 
     private final LinkRepository linkRepository;
     private final PaginationStateRepository paginationStateRepository;
+    private final TransactionManager txManager;
     private final HostingApiFactory hostingApiFactory;
     private final long refreshDelayMs;
     private final int videosPerPage;
@@ -40,7 +42,7 @@ public class ServiceLayerImpl implements ServiceLayer {
 
     public ServiceLayerImpl(LinkRepository linkRepository,
         PaginationStateRepository paginationStateRepository, HostingApiFactory hostingApiFactory,
-        long refreshDelayMs, int videosPerPage) {
+        long refreshDelayMs, int videosPerPage, TransactionManager txManager) {
         this.linkRepository = linkRepository;
         this.paginationStateRepository = paginationStateRepository;
         this.hostingApiFactory = hostingApiFactory;
@@ -53,6 +55,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             throw new IllegalArgumentException("videosPerPage must be positive");
         }
         this.videosPerPage = videosPerPage;
+        this.txManager = txManager;
         refreshSemaphore = new Semaphore(1);
     }
 
@@ -238,7 +241,6 @@ public class ServiceLayerImpl implements ServiceLayer {
     }
 
     @Override
-    @Transactional
     public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback) {
         // TODO: переписать с использованием metadataByIds
@@ -253,12 +255,13 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
-            var videos = linkRepository.findAllForUpdate();
+            var videos = txManager.execute(linkRepository::findAllForUpdate);
             var hasErrors = false;
             for (int i = 0; i < videos.size(); i++) {
                 var video = videos.get(i);
                 try {
-                    hasErrors = hasErrors || addVideo(video.rawLink()).isFailure();
+                    final var rawLink = video.rawLink();
+                    hasErrors = hasErrors || txManager.execute(() -> addVideo(rawLink)).isFailure();
                     if (i < videos.size() - 1) {
                         Thread.sleep(refreshDelayMs);
                     }
@@ -272,25 +275,28 @@ public class ServiceLayerImpl implements ServiceLayer {
                     hasErrors = true;
                 }
             }
-            var maybePaginationState = paginationStateRepository.find(userId, messageId);
-            var firstSeenId =
-                maybePaginationState.isPresent() ? maybePaginationState.get().firstSeenId() : 0L;
-            var lastSeenId =
-                maybePaginationState.isPresent() ? maybePaginationState.get().lastSeenId()
-                    : videosPerPage;
-            var items = linkRepository.findNextPage(firstSeenId - 1, videosPerPage);
-            var totalLinks = linkRepository.getTotalLinkCount();
-            var totalViews = linkRepository.getTotalViewSum();
-            var responseItems = items.stream()
-                .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
-                    l.views(),
-                    l.updatedAt()))
-                .toList();
-            var hasNext = lastSeenId < totalLinks;
-            var hasPrev = firstSeenId > 1;
-            var response = new RefreshVideosPagedResponse(responseItems, totalLinks,
-                hasNext,
-                hasPrev, totalViews, hasErrors);
+            final var hasErrorsFinal = hasErrors;
+            var response = txManager.execute(() -> {
+                var maybePaginationState = paginationStateRepository.find(userId, messageId);
+                var firstSeenId =
+                    maybePaginationState.isPresent() ? maybePaginationState.get().firstSeenId()
+                        : 0L;
+                var lastSeenId =
+                    maybePaginationState.isPresent() ? maybePaginationState.get().lastSeenId()
+                        : videosPerPage;
+                var items = linkRepository.findNextPage(firstSeenId - 1, videosPerPage);
+                var totalLinks = linkRepository.getTotalLinkCount();
+                var totalViews = linkRepository.getTotalViewSum();
+                var responseItems = items.stream()
+                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
+                        l.views(),
+                        l.updatedAt()))
+                    .toList();
+                var hasNext = lastSeenId < totalLinks;
+                var hasPrev = firstSeenId > 1;
+                return new RefreshVideosPagedResponse(responseItems, totalLinks,
+                    hasNext, hasPrev, totalViews, hasErrorsFinal);
+            });
             cb.accept(Success.of(response));
             refreshSemaphore.release();
         });
