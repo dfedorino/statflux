@@ -1,0 +1,18 @@
+package com.rmrf.statflux.domain.dto;
+
+import java.util.List;
+import lombok.NonNull;
+
+/**
+ * @param items       список видео
+ * @param totalVideos общее количество всех видео в базе
+ * @param hasNext     есть ли следующая страница
+ * @param hasPrev     есть ли предыдущая страница
+ * @param totalViews  общее количество просмотром всех видео в базе
+ * @param hasErrors   если true - при обновлении возникли ошибки
+ */
+public record RefreshVideosPagedResponse(@NonNull List<VideoStatsItem> items, int totalVideos,
+                                         boolean hasNext, boolean hasPrev, long totalViews,
+                                         boolean hasErrors) {
+
+}
