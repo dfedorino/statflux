@@ -1,0 +1,27 @@
+@startuml
+actor User
+
+User -> TelegramBotContext : /stats
+return List<LinkDto> + total views
+
+TelegramBotContext -> StatsHandler : messageId
+return List<LinkDto> + total views
+
+StatsHandler -> ServiceLayer : nextPage(messageId)
+return List<LinkDto> + total views
+
+ServiceLayer -> LinkRepository : nextPage(messageId)
+return List<LinkDto>
+
+database PostgreSQL
+
+LinkRepository -> PostgreSQL : SELECT * FROM links ORDER BY createdAt LIMIT 5 OFFSET offset + 5;
+return List<LinkDto>
+
+LinkRepository -> PostgreSQL : UPDATE links SET offset = offset + 5 WHERE message_id = :messageId;
+return 1
+
+ServiceLayer -> LinkRepository : getTotalViews()
+return long
+
+@enduml

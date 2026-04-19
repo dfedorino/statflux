@@ -1,15 +1,13 @@
 package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
-import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
+import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.result.Result;
-import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
 
-public interface ServiceLayer {
-
+public interface UserSessionService {
 
     /**
      * @param rawUrl url видео
@@ -18,17 +16,14 @@ public interface ServiceLayer {
     @NonNull
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
-    /**
-     * @param skip пагинация - сколько документов пропустить
-     * @param take пагинация - сколько документов вернуть на одной странице
-     */
     @NonNull
-    Result<VideoStatsResponse> getVideos(Optional<Integer> skip, Optional<Integer> take);
+    Result<VideoStatsResponse> getVideos(@NonNull String userId, @NonNull String messageId);
 
     @NonNull
-    default Result<VideoStatsResponse> getVideos() {
-        return getVideos(Optional.empty(), Optional.empty());
-    }
+    Result<VideoStatsResponse> getNextVideos(@NonNull String userId, @NonNull String messageId);
+
+    @NonNull
+    Result<VideoStatsResponse> getPreviousVideos(@NonNull String userId, @NonNull String messageId);
 
     /**
      * Запуск асинхронного процесса обновления метаданных видео. Результат обновления возвращается
@@ -39,5 +34,7 @@ public interface ServiceLayer {
      *                 быть не обработаны из-за ошибок. Failure - процесс обновления полностью
      *                 завершился неуспехом
      */
-    void refreshVideos(Consumer<Result<RefreshVideosResponse>> callback);
+    void refreshVideos(@NonNull String userId, @NonNull String messageId,
+        Consumer<Result<RefreshVideosPagedResponse>> callback);
+
 }

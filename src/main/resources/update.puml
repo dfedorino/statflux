@@ -1,0 +1,37 @@
+@startuml
+actor User
+
+User -> TelegramBotContext : inlineButton update()
+return List<LinkDto> + total views
+
+TelegramBotContext -> UpdateHandler : update(messageId)
+return List<LinkDto> + total views
+
+UpdateHandler -> ServiceLayer : update(messageId)
+return List<LinkDto> + total views
+
+ServiceLayer -> LinkRepository : findAll()
+return List<LinkDto>
+
+ServiceLayer -> HostingApi : getViews(List<String> hostingLinkIds)
+return List<LinkMetadata>
+
+loop update all
+
+ServiceLayer -> LinkRepository : save(LinkDto link)
+return boolean
+
+database PostgreSQL
+
+LinkRepository -> PostgreSQL : UPDATE link WHERE ...;
+return int
+
+end
+
+ServiceLayer -> LinkRepository : findAllByMessageId(String messageId)
+return List<LinkDto>
+
+ServiceLayer -> LinkRepository : getTotalViews()
+return long
+
+@enduml
