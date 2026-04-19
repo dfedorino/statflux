@@ -11,6 +11,7 @@ import java.time.ZonedDateTime;
  * @param updatedAt   время последнего обновления
  */
 public record LinkDto(
+    Long id,
     String hostingName,
     String rawLink,
     String hostingId,

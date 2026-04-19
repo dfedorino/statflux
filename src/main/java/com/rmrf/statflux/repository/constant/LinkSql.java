@@ -37,4 +37,13 @@ public final class LinkSql {
 
     public static final String GET_TOTAL_LINK_COUNT =
         "SELECT count(id) FROM links";
+
+    public static final String FIND_FIRST_PAGE =
+        "SELECT * FROM links ORDER BY id ASC LIMIT ?";
+
+    public static final String FIND_NEXT_PAGE =
+        "SELECT * FROM links WHERE id > ? ORDER BY id ASC LIMIT ?";
+
+    public static final String FIND_PREVIOUS_PAGE =
+        "SELECT * FROM links WHERE id < ? ORDER BY id DESC LIMIT ?";
 }

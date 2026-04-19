@@ -10,21 +10,25 @@ return List<LinkDto> + total views
 UpdateHandler -> ServiceLayer : update(messageId)
 return List<LinkDto> + total views
 
-ServiceLayer -> LinkRepository : getLinks(messageId)
-return List<LinkDto>
-
-database PostgreSQL
-
-LinkRepository -> PostgreSQL : SELECT * FROM links WHERE message_id = :messageId;
+ServiceLayer -> LinkRepository : findAll()
 return List<LinkDto>
 
 ServiceLayer -> HostingApi : getViews(List<String> hostingLinkIds)
 return List<LinkMetadata>
 
-ServiceLayer -> LinkRepository : saveAll(List<LinkDto> updatedLinks)
+loop update all
+
+ServiceLayer -> LinkRepository : save(LinkDto link)
 return boolean
 
-LinkRepository -> PostgreSQL : UPDATE links SET views = :views WHERE ...;
+database PostgreSQL
+
+LinkRepository -> PostgreSQL : UPDATE link WHERE ...;
+return int
+
+end
+
+ServiceLayer -> LinkRepository : findAllByMessageId(String messageId)
 return List<LinkDto>
 
 ServiceLayer -> LinkRepository : getTotalViews()
