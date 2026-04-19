@@ -17,13 +17,13 @@ public interface UserSessionService {
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
     @NonNull
-    Result<VideoStatsResponse> getVideos(@NonNull String userId, @NonNull String messageId);
+    Result<VideoStatsResponse> getVideos(@NonNull Long userId, @NonNull Long messageId);
 
     @NonNull
-    Result<VideoStatsResponse> getNextVideos(@NonNull String userId, @NonNull String messageId);
+    Result<VideoStatsResponse> getNextVideos(@NonNull Long userId, @NonNull Long messageId);
 
     @NonNull
-    Result<VideoStatsResponse> getPreviousVideos(@NonNull String userId, @NonNull String messageId);
+    Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId, @NonNull Long messageId);
 
     /**
      * Запуск асинхронного процесса обновления метаданных видео. Результат обновления возвращается
@@ -34,7 +34,7 @@ public interface UserSessionService {
      *                 быть не обработаны из-за ошибок. Failure - процесс обновления полностью
      *                 завершился неуспехом
      */
-    void refreshVideos(@NonNull String userId, @NonNull String messageId,
+    void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback);
 
 }
