@@ -9,6 +9,7 @@ import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
+import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
@@ -230,5 +231,39 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
             .containsExactly("https://youtube.com/v/11", "https://youtube.com/v/12",
                 "https://youtube.com/v/13", "https://youtube.com/v/14", "https://youtube.com/v/15");
         assertTrue(response.hasErrors());
+    }
+
+    @Test
+    public void simultaneousRefreshesAreForbidden() throws InterruptedException {
+        serviceLayer.getVideos(USER_ID, MESSAGE_ID);
+        serviceLayer.getNextVideos(USER_ID, MESSAGE_ID);
+        serviceLayer.getNextVideos(USER_ID, MESSAGE_ID);
+
+        var responseRef = new AtomicReference<Result<RefreshVideosPagedResponse>>(null);
+        var latch = new CountDownLatch(2);
+        serviceLayer.refreshVideos(USER_ID, MESSAGE_ID, c -> {
+            responseRef.set(c);
+            latch.countDown();
+        });
+        var expectedFailedResponseRef = new AtomicReference<Result<RefreshVideosPagedResponse>>(
+            null);
+        serviceLayer.refreshVideos(USER_ID, MESSAGE_ID, c -> {
+            expectedFailedResponseRef.set(c);
+            latch.countDown();
+        });
+        var discard = latch.await(30L, TimeUnit.SECONDS);
+        var responseEither = responseRef.get();
+        assertThat(responseEither).isInstanceOf(Success.class);
+        var response = responseEither.get();
+
+        assertThat(response.items()).extracting(VideoStatsItem::id)
+            .containsExactly("https://youtube.com/v/11", "https://youtube.com/v/12",
+                "https://youtube.com/v/13", "https://youtube.com/v/14", "https://youtube.com/v/15");
+        assertTrue(response.hasErrors());
+
+        var failedResponseEither = expectedFailedResponseRef.get();
+        assertThat(failedResponseEither).isInstanceOf(Failure.class);
+        assertThat(failedResponseEither.asFailure().exception()).isInstanceOf(
+            RefreshInProgressException.class);
     }
 }
