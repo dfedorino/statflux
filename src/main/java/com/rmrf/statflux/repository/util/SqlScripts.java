@@ -1,21 +1,19 @@
-package com.rmrf.statflux.repository.query;
+package com.rmrf.statflux.repository.util;
 
 import com.rmrf.statflux.repository.exception.SqlScriptException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
-public class SqlScriptRunner {
+@UtilityClass
+public class SqlScripts {
 
-    private final QueryExecutor executor;
-
-    public void run(@NonNull String classpathFile) {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(classpathFile)) {
+    public static void run(@NonNull String classpathFile) {
+        try (InputStream is = SqlScripts.class.getClassLoader().getResourceAsStream(classpathFile)) {
             if (is == null) {
                 log.error("SqlScriptRunner[run] file not found {}", classpathFile);
                 throw new SqlScriptException("File not found: " + classpathFile);
@@ -26,7 +24,7 @@ public class SqlScriptRunner {
             for (String statement : sql.split(";")) {
                 String trimmed = statement.trim();
                 if (!trimmed.isEmpty()) {
-                    executor.update(trimmed);
+                    Queries.update(trimmed);
                 }
             }
 

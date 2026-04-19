@@ -10,6 +10,8 @@ public interface LinkRepository {
 
     List<LinkDto> findAll();
 
+    List<LinkDto> findAllForUpdate();
+
     int getTotalLinkCount();
 
     long getTotalViewSum();
