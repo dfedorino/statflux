@@ -18,7 +18,7 @@ public interface ServiceLayer {
     Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
 
     /**
-     * Получение списка видео и статистики для первой страницы
+     * Получение списка видео и статистики для первой страницы / сброс страницы на первую
      *
      * @param userId    идентификатор текущего пользователя/чата
      * @param messageId идентификатор текущего сообщения
