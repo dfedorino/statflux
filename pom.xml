@@ -19,6 +19,8 @@
         <mockito-core.version>5.23.0</mockito-core.version>
         <telegram-telegrambots-longpolling.version>9.5.0</telegram-telegrambots-longpolling.version>
         <telegram-telegrambots-client.version>9.5.0</telegram-telegrambots-client.version>
+        <mockito-junit-jupiter.version>5.8.0</mockito-junit-jupiter.version>
+        <jackson-databind.version>2.16.1</jackson-databind.version>
     </properties>
 
     <dependencies>
@@ -64,6 +66,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito-junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-longpolling</artifactId>
             <version>${telegram-telegrambots-longpolling.version}</version>
@@ -73,6 +82,12 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-client</artifactId>
             <version>${telegram-telegrambots-client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
         </dependency>
     </dependencies>
 
