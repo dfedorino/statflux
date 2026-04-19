@@ -3,14 +3,17 @@ package com.rmrf.statflux.service;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
+import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.integration.HostingApiFactory;
-import com.rmrf.statflux.repository.RepositoryLayer;
+import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
+import com.rmrf.statflux.repository.dto.LinkDto;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
@@ -22,15 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ServiceLayerImpl implements ServiceLayer {
 
-    private final RepositoryLayer repositoryLayer;
+    private final LinkRepository repositoryLayer;
     private final HostingApiFactory hostingApiFactory;
     private final long refreshDelayMs;
 
     private final Semaphore refreshSemaphore;
 
-    public ServiceLayerImpl(RepositoryLayer repositoryLayer, HostingApiFactory hostingApiFactory,
+    public ServiceLayerImpl(LinkRepository linkRepository, HostingApiFactory hostingApiFactory,
         long refreshDelayMs) {
-        this.repositoryLayer = repositoryLayer;
+        this.repositoryLayer = linkRepository;
         this.hostingApiFactory = hostingApiFactory;
         if (refreshDelayMs <= 0) {
             throw new IllegalArgumentException("refreshDelayMs must be positive");
@@ -50,12 +53,15 @@ public class ServiceLayerImpl implements ServiceLayer {
             var hostingApi = hostingApiEither.get();
             return switch (hostingApi.linkMetadata(rawUrl)) {
                 case Success<LinkMetadataResponse> s -> {
-                    var success = repositoryLayer.save(
+                    var dbItem = new LinkDto(
                         hostingApi.hostingName(),
                         s.result().rawUrl(),
                         s.result().platformId(),
                         s.result().title(),
-                        s.result().views());
+                        s.result().views(),
+                        ZonedDateTime.now()
+                    );
+                    var success = repositoryLayer.save(dbItem);
                     if (!success) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
                         yield Failure.of(
@@ -85,12 +91,17 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getVideos(Optional<Integer> skip,
         Optional<Integer> take) {
         try {
-            var items = repositoryLayer.getVideos(skip, take);
-            var totalLinks = repositoryLayer.getTotalVideosCount();
-            var totalViews = repositoryLayer.getTotalViewCount();
+            var items = repositoryLayer.findAll();
+            var totalLinks = repositoryLayer.getTotalLinkCount();
+            var totalViews = repositoryLayer.getTotalViewSum();
+            var responseItems = items.stream()
+                .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
+                    l.updatedAt()))
+                .toList();
             var hasMore = totalLinks > items.size();
             var hasPrev = skip.filter(s -> s > 0).isPresent();
-            var resp = new VideoStatsResponse(items, totalLinks, hasMore, hasPrev, totalViews);
+            var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
+                totalViews);
             return Success.of(resp);
         } catch (Throwable e) {
             log.error("ServiceLayerImpl[getVideos] unhandled exception", e);
@@ -110,12 +121,12 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
-            var videos = repositoryLayer.getVideos();
+            var videos = repositoryLayer.findAll();
             var hasErrors = false;
             for (int i = 0; i < videos.size(); i++) {
                 var video = videos.get(i);
                 try {
-                    hasErrors = hasErrors || addVideo(video.rawUrl()).isFailure();
+                    hasErrors = hasErrors || addVideo(video.rawLink()).isFailure();
                     if (i < videos.size() - 1) {
                         Thread.sleep(refreshDelayMs);
                     }
@@ -125,7 +136,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 } catch (Throwable e) {
                     log.error(
                         "ServiceLayerImpl[refreshVideos] unhandled exception while updating video id={}",
-                        video.id(), e);
+                        video.rawLink(), e);
                     hasErrors = true;
                 }
             }
