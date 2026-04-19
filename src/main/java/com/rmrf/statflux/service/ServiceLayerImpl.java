@@ -1,7 +1,7 @@
 package com.rmrf.statflux.service;
 
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
-import com.rmrf.statflux.domain.dto.LinkMetadataResponse;
+import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
@@ -51,12 +51,12 @@ public class ServiceLayerImpl implements ServiceLayer {
                 return hostingApiEither.asFailure().swap();
             }
             var hostingApi = hostingApiEither.get();
-            return switch (hostingApi.metadataByLink(rawUrl)) {
-                case Success<LinkMetadataResponse> s -> {
+            return switch (hostingApi.metadataById(rawUrl)) {
+                case Success<VideoMetadataResponse> s -> {
                     var dbItem = new LinkDto(
                         null,
                         hostingApi.hostingName(),
-                        s.result().rawUrl(),
+                        rawUrl,
                         s.result().id(),
                         s.result().title(),
                         s.result().views(),
@@ -72,10 +72,10 @@ public class ServiceLayerImpl implements ServiceLayer {
                         new AddVideoResponse(
                             hostingApi.hostingName(),
                             s.result().title(),
-                            s.result().rawUrl(),
+                            rawUrl,
                             s.result().views()));
                 }
-                case Failure<LinkMetadataResponse> f -> {
+                case Failure<VideoMetadataResponse> f -> {
                     log.error("ServiceLayerImpl[addVideo] failed to parse rawUrl={} reason={}",
                         rawUrl,
                         f.exception().getMessage());
