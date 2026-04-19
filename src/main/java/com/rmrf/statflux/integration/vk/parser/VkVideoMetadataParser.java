@@ -186,7 +186,6 @@ public class VkVideoMetadataParser {
         Long videoId = null;
         String title = null;
         Long views = null;
-        String videoUrl = null;
 
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (parser.currentToken() != JsonToken.FIELD_NAME) {
