@@ -69,7 +69,7 @@ public class ServiceLayerIT extends BaseRepositoryTest {
             .hasSize(1)
             .first()
             .satisfies(link -> {
-                assertThat(link.id()).isEqualTo(hostingId);
+                assertThat(link.id()).isEqualTo("1");
                 assertThat(link.name()).isEqualTo(title);
                 assertThat(link.rawUrl()).isEqualTo(rawUrl);
                 assertThat(link.views()).isEqualTo(views);

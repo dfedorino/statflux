@@ -89,15 +89,13 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         assertTrue(nextPageResp.hasPrev());
         assertTrue(nextPageResp.hasNext());
         assertThat(nextPageResp.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/6", "https://youtube.com/v/7",
-                "https://youtube.com/v/8", "https://youtube.com/v/9", "https://youtube.com/v/10");
+            .containsExactly("6", "7", "8", "9", "10");
 
         var nextNextPageResp = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(nextNextPageResp.hasPrev());
         assertTrue(nextNextPageResp.hasNext());
         assertThat(nextNextPageResp.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/11", "https://youtube.com/v/12",
-                "https://youtube.com/v/13", "https://youtube.com/v/14", "https://youtube.com/v/15");
+            .containsExactly("11", "12", "13", "14", "15");
     }
 
     @Test
@@ -120,8 +118,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var previousPageResp = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
 
         assertThat(previousPageResp.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/16", "https://youtube.com/v/17",
-                "https://youtube.com/v/18", "https://youtube.com/v/19", "https://youtube.com/v/20");
+            .containsExactly("16", "17", "18", "19", "20");
     }
 
     @Test
@@ -162,8 +159,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
         assertTrue(lastResp.hasPrev());
         assertThat(lastResp.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/26", "https://youtube.com/v/27",
-                "https://youtube.com/v/28", "https://youtube.com/v/29", "https://youtube.com/v/30");
+            .containsExactly("26", "27", "28", "29", "30");
         assertFalse(lastResp.hasNext());
     }
 
@@ -182,8 +178,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
         assertFalse(lastResp.hasPrev());
         assertThat(lastResp.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/1", "https://youtube.com/v/2",
-                "https://youtube.com/v/3", "https://youtube.com/v/4", "https://youtube.com/v/5");
+            .containsExactly("1", "2", "3", "4", "5");
         assertTrue(lastResp.hasNext());
     }
 
@@ -228,8 +223,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var response = responseEither.get();
 
         assertThat(response.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/11", "https://youtube.com/v/12",
-                "https://youtube.com/v/13", "https://youtube.com/v/14", "https://youtube.com/v/15");
+            .containsExactly("11", "12", "13", "14", "15");
         assertTrue(response.hasErrors());
     }
 
@@ -257,8 +251,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var response = responseEither.get();
 
         assertThat(response.items()).extracting(VideoStatsItem::id)
-            .containsExactly("https://youtube.com/v/11", "https://youtube.com/v/12",
-                "https://youtube.com/v/13", "https://youtube.com/v/14", "https://youtube.com/v/15");
+            .containsExactly("11", "12", "13", "14", "15");
         assertTrue(response.hasErrors());
 
         var failedResponseEither = expectedFailedResponseRef.get();
