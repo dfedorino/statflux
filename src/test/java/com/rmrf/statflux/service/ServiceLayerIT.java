@@ -60,7 +60,7 @@ public class ServiceLayerIT extends BaseRepositoryTest {
             )
         ));
 
-        var foundLinks = serviceLayer.getVideos(Optional.empty(), Optional.empty());
+        var foundLinks = serviceLayer.getVideos(1L, 2L);
 
         assertThat(foundLinks.isSuccess()).isTrue();
         var found = foundLinks.get();
@@ -69,7 +69,7 @@ public class ServiceLayerIT extends BaseRepositoryTest {
             .hasSize(1)
             .first()
             .satisfies(link -> {
-                assertThat(link.id()).isEqualTo(hostingId);
+                assertThat(link.id()).isEqualTo("1");
                 assertThat(link.name()).isEqualTo(title);
                 assertThat(link.rawUrl()).isEqualTo(rawUrl);
                 assertThat(link.views()).isEqualTo(views);
