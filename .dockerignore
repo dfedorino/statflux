@@ -1,0 +1,37 @@
+# Файлы/папки, которые НЕ копируются в build context Docker.
+
+# IDE / OS
+.idea/
+.gigaide/
+.DS_Store
+*.iml
+
+# Build output
+target/
+*.class
+*.log
+
+# Секреты
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Docs and drafts — не нужны в runtime-образе
+draft/
+docs/
+*.md
+
+# Checkstyle — в Dockerfile сборка идёт через package без verify
+.checkstyle/
+.mvn/
+
+# Docker-файлы не копируем внутрь себя
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -44,6 +44,137 @@ Content views service for creators
 - util - вспомогательные классы
 - Main.java - точка входа сервиса
 
+## Запуск
+
+### Что нужно заранее
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) установлен и запущен
+- Telegram-аккаунт с username
+- Аккаунт в [Google Cloud Console](https://console.cloud.google.com/) (для YouTube API ключа)
+- Полученный access token от VK Video
+
+### Шаги
+
+**1. Клонировать репозиторий**
+
+```bash
+git clone <repo-url>
+cd statflux
+```
+
+**2. Убедиться, что Docker Desktop работает**
+
+```bash
+docker info   # должен выдать список, а не ошибку
+```
+
+**3. Освободить порт 5432 (если установлен локальный Postgres)**
+
+```bash
+lsof -i :5432   # если что-то есть — останови
+brew services stop postgresql       # Homebrew
+# или: brew services stop postgresql@16
+```
+
+После — повтори `lsof -i :5432`, должно быть пусто.
+
+**4. Получить токен бота**
+
+Токен выдаёт команда разработки. Это строка вида `8123456789:AAEx...` — запиши её как `TELEGRAM_BOT_TOKEN`.
+
+**5. Узнать свой Telegram username**
+
+Telegram → Settings → поле **Username** (без `@`). Например: `jambod`.
+
+**6. Сгенерировать пароль для БД**
+
+```bash
+openssl rand -base64 24
+# пример: Xk9/vLpQ2mNa4T3eRxCw7sK6/FhDjBgZ
+```
+
+**7. Создать `.env`**
+
+```bash
+cp .env.example .env
+```
+
+Открой `.env` и заполни:
+
+```env
+TELEGRAM_BOT_TOKEN=8123456789:AAEx...    # из шага 4
+TELEGRAM_BOT_WHITE_LIST=jambod          # из шага 5, без @
+
+POSTGRES_PASSWORD=Xk9/vLpQ2mNa4T3e...  # из шага 6
+DB_PASSWORD=Xk9/vLpQ2mNa4T3e...        # то же самое, что POSTGRES_PASSWORD!
+
+YOUTUBE_API_KEY=your_youtube_api_key    # из Google Cloud Console
+VK_VIDEO_ACCESS_TOKEN=your_vk_access_token # из VK
+```
+
+Остальные значения (`POSTGRES_DB`, `POSTGRES_USER`, `DB_URL`, `DB_USER`) оставь как есть.
+
+**8. Запустить**
+
+```bash
+docker compose up --build
+```
+
+Первый раз ~2–5 минут: Docker скачивает образы и собирает fat-jar.
+
+Признаки успеха в логах:
+- `statflux-db | database system is ready to accept connections`
+- `statflux-app | ... BotSession ...` (без Exception)
+
+Оставь этот терминал открытым.
+
+**9. Проверить состояние (новый терминал)**
+
+```bash
+docker compose ps               # оба Up, db — healthy
+docker compose logs app | tail -30
+docker compose logs db  | tail -10
+```
+
+**10. Проверить бота**
+
+Найди `@statflux_bot` в Telegram → нажми **/start** → пришли ссылки из поддерживаемых платформ.
+Если пишешь с аккаунта не из whitelist — бот молчит, это ожидаемо.
+
+**11. Проверить БД (опционально)**
+
+```bash
+docker exec -it statflux-db psql -U statflux -d statflux_db
+```
+
+```sql
+\du   -- роль statflux есть
+\l    -- база statflux_db есть
+\q    -- выйти
+```
+
+Подключение через DataGrip/DBeaver: хост `localhost`, порт `5432`, база `statflux_db`, пользователь `statflux`.
+
+**12. Остановить**
+
+```bash
+docker compose down      # контейнеры стоп, данные БД сохранены
+docker compose down -v   # + удалить volume (БД с нуля при следующем запуске)
+```
+
+---
+
+### Если что-то пошло не так
+
+| Симптом | Причина | Решение |
+|---|---|---|
+| `port is already allocated` | Локальный Postgres занял 5432 | Шаг 3 — остановить локальный Postgres |
+| `app` перезапускается в цикле | Пустой или неверный `TELEGRAM_BOT_TOKEN` | Проверь `.env`, `docker compose logs app` |
+| Бот не отвечает | Username не в whitelist или бот не запущен | Проверь `TELEGRAM_BOT_WHITE_LIST` в `.env` (без `@`) |
+| `db` не становится healthy | Volume создан с другим паролем | `docker compose down -v` → повторить шаг 8 |
+
+---
+
 ## Основные задачи на хакатоне
 
 Необходимо разработать телеграм-бота и бэкенд-сервис, который обеспечивает следующие функции:
