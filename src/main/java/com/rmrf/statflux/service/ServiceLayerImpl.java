@@ -122,8 +122,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             paginationStateRepository.save(state);
 
             var responseItems = items.stream()
-                .map(l -> new VideoStatsItem(l.hostingId(), l.title(), l.rawLink(), l.views(),
-                    l.updatedAt()))
+                .map(LinkDto::toVideoStatsItem)
                 .toList();
             var hasMore = totalLinks > items.size();
             var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
@@ -165,8 +164,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 paginationStateRepository.save(state);
 
                 var responseItems = items.stream()
-                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
-                        l.updatedAt()))
+                    .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasMore = lastSeenId < totalLinks;
                 var hasPrev = firstSeenId > 1;
@@ -210,8 +208,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 paginationStateRepository.save(state);
 
                 var responseItems = items.stream()
-                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(), l.views(),
-                        l.updatedAt()))
+                    .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasMore = lastSeenId < totalLinks;
                 var hasPrev = firstSeenId > 1;
@@ -288,9 +285,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
                 var responseItems = items.stream()
-                    .map(l -> new VideoStatsItem(l.rawLink(), l.title(), l.rawLink(),
-                        l.views(),
-                        l.updatedAt()))
+                    .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasNext = lastSeenId < totalLinks;
                 var hasPrev = firstSeenId > 1;
