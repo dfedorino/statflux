@@ -12,8 +12,8 @@ public class TelegramBotConfigFromEnv implements TelegramBotConfig {
     private Set<String> whiteList;
 
     public TelegramBotConfigFromEnv() {
-        token = System.getenv("BOT_TOKEN");
-        String whiteListStringified = System.getenv("BOT_WHITE_LIST");
+        token = System.getenv("TELEGRAM_BOT_TOKEN");
+        String whiteListStringified = System.getenv("TELEGRAM_BOT_WHITE_LIST");
         try {
             whiteList = Arrays.stream(whiteListStringified.split(",")).collect(Collectors.toSet());
         } catch (Throwable e) {

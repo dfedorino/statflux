@@ -9,7 +9,7 @@ import lombok.NonNull;
 
 public class Stubs {
 
-    protected static final YouTubeVideoProvider youtubeStub = new YouTubeVideoProvider() {
+    public static final YouTubeVideoProvider youtubeStub = new YouTubeVideoProvider() {
         @Override
         public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
@@ -31,7 +31,7 @@ public class Stubs {
         }
     };
 
-    protected static final VkVideoProvider vkStub = new VkVideoProvider() {
+    public static final VkVideoProvider vkStub = new VkVideoProvider() {
         @Override
         public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();

@@ -2,15 +2,13 @@ package com.rmrf.statflux.repository;
 
 import com.rmrf.statflux.repository.constant.LinkSql;
 import com.rmrf.statflux.repository.dto.LinkDto;
-import com.rmrf.statflux.repository.query.QueryExecutor;
 import com.rmrf.statflux.repository.query.ResultSetMapper;
+import com.rmrf.statflux.repository.util.Queries;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class JdbcLinkRepository implements LinkRepository {
 
     private static final ResultSetMapper<LinkDto> LINK_DTO_RESULT_SET_MAPPER = rs -> new LinkDto(
@@ -24,12 +22,11 @@ public class JdbcLinkRepository implements LinkRepository {
             .toInstant()
             .atZone(ZoneOffset.UTC)
     );
-    private final QueryExecutor queryExecutor;
 
     @Override
     public boolean save(@NonNull LinkDto linkDto) {
         // TODO: improvement - upsert
-        int updated = queryExecutor.update(
+        int updated = Queries.update(
             LinkSql.UPDATE,
             linkDto.rawLink(),
             linkDto.title(),
@@ -38,7 +35,7 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.hostingName(),
             linkDto.hostingId());
 
-        return updated == 1 || queryExecutor.update(
+        return updated == 1 || Queries.update(
             LinkSql.INSERT,
             linkDto.hostingName(),
             linkDto.rawLink(),
@@ -51,14 +48,21 @@ public class JdbcLinkRepository implements LinkRepository {
 
     @Override
     public List<LinkDto> findAll() {
-        return queryExecutor.query(
+        return Queries.query(
             LinkSql.FIND_ALL,
             LINK_DTO_RESULT_SET_MAPPER);
     }
 
     @Override
+    public List<LinkDto> findAllForUpdate() {
+        return Queries.query(
+            LinkSql.FIND_ALL_FOR_UPDATE,
+            LINK_DTO_RESULT_SET_MAPPER);
+    }
+
+    @Override
     public int getTotalLinkCount() {
-        return queryExecutor.query(
+        return Queries.query(
                 LinkSql.GET_TOTAL_LINK_COUNT,
                 rs -> rs.getInt(1)
             )
@@ -67,7 +71,7 @@ public class JdbcLinkRepository implements LinkRepository {
 
     @Override
     public long getTotalViewSum() {
-        return queryExecutor.query(
+        return Queries.query(
                 LinkSql.GET_TOTAL_VIEW_SUM,
                 rs -> rs.getLong(1)
             )
@@ -76,7 +80,7 @@ public class JdbcLinkRepository implements LinkRepository {
 
     @Override
     public List<LinkDto> findFirstPage(int limit) {
-        return queryExecutor.query(
+        return Queries.query(
             LinkSql.FIND_FIRST_PAGE,
             LINK_DTO_RESULT_SET_MAPPER,
             limit
@@ -85,7 +89,7 @@ public class JdbcLinkRepository implements LinkRepository {
 
     @Override
     public List<LinkDto> findNextPage(long lastSeenId, int limit) {
-        return queryExecutor.query(
+        return Queries.query(
             LinkSql.FIND_NEXT_PAGE,
             LINK_DTO_RESULT_SET_MAPPER,
             lastSeenId,
@@ -95,7 +99,7 @@ public class JdbcLinkRepository implements LinkRepository {
 
     @Override
     public List<LinkDto> findPreviousPage(long firstSeenId, int limit) {
-        List<LinkDto> result = queryExecutor.query(
+        List<LinkDto> result = Queries.query(
             LinkSql.FIND_PREVIOUS_PAGE,
             LINK_DTO_RESULT_SET_MAPPER,
             firstSeenId,

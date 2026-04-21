@@ -1,6 +1,5 @@
 package com.rmrf.statflux.integration.config;
 
-import com.rmrf.statflux.common.ConfigLoader;
 import java.util.Properties;
 import lombok.Getter;
 
@@ -38,9 +37,7 @@ public class IntegrationConfigFromProperties implements IntegrationConfig {
     /**
      * IntegrationConfig конструктор.
      */
-    public IntegrationConfigFromProperties() {
-        Properties props = ConfigLoader.load("application.properties");
-
+    public IntegrationConfigFromProperties(Properties props) {
         this.timeout = Integer.parseInt(props.getProperty("http.timeout", "15"));
 
         this.youTubeApiKey = props.getProperty("youtube.key");

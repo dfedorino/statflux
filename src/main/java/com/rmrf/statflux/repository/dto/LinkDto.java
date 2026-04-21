@@ -1,6 +1,8 @@
 package com.rmrf.statflux.repository.dto;
 
+import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import java.time.ZonedDateTime;
+import lombok.NonNull;
 
 /**
  * @param hostingName идентификатор хостинга
@@ -20,4 +22,7 @@ public record LinkDto(
     ZonedDateTime updatedAt
 ) {
 
+    public @NonNull VideoStatsItem toVideoStatsItem() {
+        return new VideoStatsItem(id().toString(), title(), rawLink(), views(), updatedAt());
+    }
 }

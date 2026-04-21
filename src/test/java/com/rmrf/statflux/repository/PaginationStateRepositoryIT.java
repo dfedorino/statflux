@@ -31,8 +31,8 @@ public class PaginationStateRepositoryIT extends BaseRepositoryTest {
             4L,
             now
         );
-        assertThat(paginationStateRepository.save(paginationState)).isTrue();
-        assertThat(paginationStateRepository.find(1L, 2L))
+        assertThat(tx.execute(() -> paginationStateRepository.save(paginationState))).isTrue();
+        assertThat(tx.execute(() -> paginationStateRepository.find(1L, 2L)))
             .contains(paginationState);
 
     }
@@ -50,7 +50,7 @@ public class PaginationStateRepositoryIT extends BaseRepositoryTest {
             4L,
             now
         );
-        assertThat(paginationStateRepository.save(paginationState)).isTrue();
+        assertThat(tx.execute(() -> paginationStateRepository.save(paginationState))).isTrue();
 
         PaginationStateDto newPaginationState = new PaginationStateDto(
             1L,
@@ -59,8 +59,8 @@ public class PaginationStateRepositoryIT extends BaseRepositoryTest {
             5L,
             now
         );
-        assertThat(paginationStateRepository.save(newPaginationState)).isTrue();
-        assertThat(paginationStateRepository.find(1L, 2L))
+        assertThat(tx.execute(() -> paginationStateRepository.save(newPaginationState))).isTrue();
+        assertThat(tx.execute(() -> paginationStateRepository.find(1L, 2L)))
             .contains(newPaginationState);
 
     }

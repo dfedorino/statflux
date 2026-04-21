@@ -3,7 +3,7 @@ package com.rmrf.statflux.integration.config;
 import lombok.Getter;
 
 /**
- * Параметры для слоя integration из env.
+ * Параметры для слоя integration из переменных окружения
  */
 @Getter
 public class IntegrationConfigFromEnv implements IntegrationConfig {
@@ -39,7 +39,7 @@ public class IntegrationConfigFromEnv implements IntegrationConfig {
     public IntegrationConfigFromEnv() {
         this.timeout = this.parseIntOrDefault(System.getenv("HTTP_TIMEOUT"), 15);
 
-        this.youTubeApiKey = System.getenv("YOUTUBE_API_KEY");
+        this.youTubeApiKey = System.getenv("YOUTUBE_KEY");
 
         this.vkApiUrl = this.requireEnv("VK_API_URL");
         this.vkApiKey = this.requireEnv("VK_API_TOKEN");
