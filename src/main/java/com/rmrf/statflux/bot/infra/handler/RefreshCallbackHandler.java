@@ -2,6 +2,7 @@ package com.rmrf.statflux.bot.infra.handler;
 
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
+import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -13,6 +14,11 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class RefreshCallbackHandler implements Chain.Node<TelegramBotContext> {
+    private final ServiceLayer serviceLayer;
+
+    public RefreshCallbackHandler(ServiceLayer serviceLayer) {
+        this.serviceLayer = serviceLayer;
+    }
 
     @Override
     public void handle(TelegramBotContext ctx, Consumer<TelegramBotContext> next) {
