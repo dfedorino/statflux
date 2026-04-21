@@ -8,6 +8,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated В пользу env
+ */
+@Deprecated
 public class TelegramBotConfigFromProperties implements TelegramBotConfig {
     private final String token;
     private Set<String> whiteList;

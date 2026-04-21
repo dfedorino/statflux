@@ -1,25 +1,24 @@
 package com.rmrf.statflux.repository.datasource.impl;
 
+import com.rmrf.statflux.repository.config.DbConnectionConfig;
 import com.rmrf.statflux.repository.datasource.DataSource;
 import com.rmrf.statflux.repository.datasource.PerThreadConnectionHolder;
 import com.rmrf.statflux.repository.exception.ConnectionException;
 import com.rmrf.statflux.repository.util.Connections;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleDataSource implements DataSource {
-
-    private final Properties props;
+    private final DbConnectionConfig dbConnectionConfig;
 
     @Override
     public Connection getConnection() {
         if (PerThreadConnectionHolder.get() == null) {
-            PerThreadConnectionHolder.set(Connections.initConnection(props));
+            PerThreadConnectionHolder.set(Connections.initConnection(dbConnectionConfig));
         }
         return PerThreadConnectionHolder.get();
     }
