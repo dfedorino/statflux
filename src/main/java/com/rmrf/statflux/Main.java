@@ -1,6 +1,7 @@
 package com.rmrf.statflux;
 
 import com.rmrf.statflux.bot.core.TelegramBotRootConsumer;
+import com.rmrf.statflux.bot.infra.config.HandlerConfig;
 import com.rmrf.statflux.bot.infra.TelegramBotConfigFromEnv;
 import com.rmrf.statflux.bot.infra.config.HandlersConfig;
 import com.rmrf.statflux.bot.infra.middleware.WhiteListMiddleware;
@@ -16,6 +17,8 @@ public class Main {
         TelegramBotConfig botConfig = new TelegramBotConfigFromEnv();
 
         HandlersConfig handlersConfig = new HandlersConfig();
+
+        HandlerConfig handlerConfig = new HandlerConfig();
 
         TelegramBotRootConsumer botRootConsumer = TelegramBotRootConsumer.builder()
                 .withClient(new OkHttpTelegramClient(botConfig.getToken()))

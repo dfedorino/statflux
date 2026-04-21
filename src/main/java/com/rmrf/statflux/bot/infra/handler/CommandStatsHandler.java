@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
-    private ServiceLayer serviceLayer;
+    private final ServiceLayer serviceLayer;
     private final Localization.Stats localization;
 
     public CommandStatsHandler(ServiceLayer serviceLayer, Localization.Stats localization) {
@@ -40,6 +40,7 @@ public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
             next.accept(ctx);
             return;
         }
+        var stats = serviceLayer.getVideos(message.getChatId(), (long) message.getMessageId());
 
 //        var response = serviceLayer.getVideos(message.getChatId(), (long) message.getMessageId());
         var statsResult = Success.of(new VideoStatsResponse(

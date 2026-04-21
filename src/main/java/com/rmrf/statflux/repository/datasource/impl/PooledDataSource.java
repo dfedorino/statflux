@@ -1,5 +1,6 @@
 package com.rmrf.statflux.repository.datasource.impl;
 
+import com.rmrf.statflux.repository.config.DbPooledConnectionConfig;
 import com.rmrf.statflux.repository.datasource.DataSource;
 import com.rmrf.statflux.repository.exception.ConnectionException;
 import com.rmrf.statflux.repository.util.Connections;
@@ -8,7 +9,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +19,13 @@ public class PooledDataSource implements DataSource {
     private final BlockingQueue<Connection> pool;
     private final List<Connection> allConnections;
 
-    public PooledDataSource(Properties props) {
-        int poolSize = Integer.parseInt(props.getProperty("connection.pool.poolSize"));
+    public PooledDataSource(DbPooledConnectionConfig connectionConfig) {
+        int poolSize = connectionConfig.getPoolSize();
         this.pool = new ArrayBlockingQueue<>(poolSize);
         this.allConnections = new ArrayList<>(poolSize);
         log.info("initializing connection pool if size {}",  poolSize);
         for (int i = 0; i < poolSize; i++) {
-            Connection conn = Connections.initConnection(props);
+            Connection conn = Connections.initConnection(connectionConfig);
             pool.offer(wrap(conn));
             allConnections.add(conn);
         }

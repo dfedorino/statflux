@@ -5,7 +5,9 @@ import lombok.Getter;
 
 /**
  * Параметры для слоя integration из application.properties
+ * @deprecated В пользу env
  */
+@Deprecated
 @Getter
 public class IntegrationConfigFromProperties implements IntegrationConfig {
 
