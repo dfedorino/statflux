@@ -13,7 +13,7 @@ import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
-import com.rmrf.statflux.integration.HostingApiFactory;
+import com.rmrf.statflux.integration.VideoProviderFactory;
 import com.rmrf.statflux.repository.BaseRepositoryTest;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.PaginationStateRepository;
@@ -31,7 +31,7 @@ import org.mockito.Mockito;
 public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
     private final ServiceConfig serviceConfig = new ServiceConfig();
-    private final HostingApiFactory mockHostingApiFactory = Mockito.mock(HostingApiFactory.class);
+    private final VideoProviderFactory mockHostingApiFactory = Mockito.mock(VideoProviderFactory.class);
     private LinkRepository linkRepository;
     private PaginationStateRepository paginationStateRepository;
     private ServiceLayer serviceLayer;

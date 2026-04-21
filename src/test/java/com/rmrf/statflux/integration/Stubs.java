@@ -1,15 +1,15 @@
-package com.rmrf.statflux;
+package com.rmrf.statflux.integration;
 
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
-import com.rmrf.statflux.integration.vk.VkHostingApi;
-import com.rmrf.statflux.integration.youtube.YouTubeHostingApi;
 import com.rmrf.statflux.domain.result.Result;
+import com.rmrf.statflux.integration.vk.VkVideoProvider;
+import com.rmrf.statflux.integration.youtube.YouTubeVideoProvider;
 import java.util.List;
 import lombok.NonNull;
 
 public class Stubs {
 
-    public static final YouTubeHostingApi youtubeStub = new YouTubeHostingApi() {
+    public static final YouTubeVideoProvider youtubeStub = new YouTubeVideoProvider() {
         @Override
         public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();
@@ -31,7 +31,7 @@ public class Stubs {
         }
     };
 
-    public static final VkHostingApi vkStub = new VkHostingApi() {
+    public static final VkVideoProvider vkStub = new VkVideoProvider() {
         @Override
         public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
             throw new UnsupportedOperationException();

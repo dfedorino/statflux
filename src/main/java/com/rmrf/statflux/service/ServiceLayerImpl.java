@@ -3,12 +3,11 @@ package com.rmrf.statflux.service;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
-import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
 import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
-import com.rmrf.statflux.integration.HostingApiFactory;
+import com.rmrf.statflux.integration.VideoProviderFactory;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
@@ -34,14 +33,14 @@ public class ServiceLayerImpl implements ServiceLayer {
     private final LinkRepository linkRepository;
     private final PaginationStateRepository paginationStateRepository;
     private final TransactionManager txManager;
-    private final HostingApiFactory hostingApiFactory;
+    private final VideoProviderFactory hostingApiFactory;
     private final long refreshDelayMs;
     private final int videosPerPage;
 
     private final Semaphore refreshSemaphore;
 
     public ServiceLayerImpl(LinkRepository linkRepository,
-        PaginationStateRepository paginationStateRepository, HostingApiFactory hostingApiFactory,
+        PaginationStateRepository paginationStateRepository, VideoProviderFactory hostingApiFactory,
         long refreshDelayMs, int videosPerPage, TransactionManager txManager) {
         this.linkRepository = linkRepository;
         this.paginationStateRepository = paginationStateRepository;

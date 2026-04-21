@@ -1,21 +1,20 @@
-package com.rmrf.statflux;
+package com.rmrf.statflux.integration;
 
-import static com.rmrf.statflux.Stubs.vkStub;
-import static com.rmrf.statflux.Stubs.youtubeStub;
+import static com.rmrf.statflux.integration.Stubs.vkStub;
+import static com.rmrf.statflux.integration.Stubs.youtubeStub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rmrf.statflux.domain.exceptions.BadUrlException;
 import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
-import com.rmrf.statflux.integration.HostingApiFactory;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class HostingApiFactoryTest {
+public class VideoProviderFactoryTest {
 
-    private final HostingApiFactory factory = new HostingApiFactory(youtubeStub, vkStub);
+    private final VideoProviderFactory factory = new VideoProviderFactory(youtubeStub, vkStub);
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("youtubeUrls")

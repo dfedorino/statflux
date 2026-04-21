@@ -2,13 +2,12 @@ package com.rmrf.statflux.repository;
 
 import com.rmrf.statflux.repository.constant.LinkSql;
 import com.rmrf.statflux.repository.dto.LinkDto;
-import com.rmrf.statflux.repository.util.Queries;
 import com.rmrf.statflux.repository.query.ResultSetMapper;
+import com.rmrf.statflux.repository.util.Queries;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 public class JdbcLinkRepository implements LinkRepository {
 

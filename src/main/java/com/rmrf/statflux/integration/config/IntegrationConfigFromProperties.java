@@ -1,26 +1,49 @@
 package com.rmrf.statflux.integration.config;
 
 import java.util.Properties;
+import lombok.Getter;
 
 /**
  * Параметры для слоя integration из application.properties
  */
+@Getter
 public class IntegrationConfigFromProperties implements IntegrationConfig {
-    private final String apiKey;
+
+    /**
+     * Таймаут HTTP запроса.
+     */
     private final int timeout;
 
+    /**
+     * YouTube API Ключ.
+     */
+    private final String youTubeApiKey;
+
+    /**
+     * VK API URL.
+     */
+    private final String vkApiUrl;
+
+    /**
+     * VK API Ключ.
+     */
+    private final String vkApiKey;
+
+    /**
+     * VK API Версия.
+     */
+    private final String vkApiVersion;
+
+    /**
+     * IntegrationConfig конструктор.
+     */
     public IntegrationConfigFromProperties(Properties props) {
-        this.apiKey = props.getProperty("youtube.key");
         this.timeout = Integer.parseInt(props.getProperty("http.timeout", "15"));
-    }
 
-    @Override
-    public String getApiKey() {
-        return apiKey;
-    }
+        this.youTubeApiKey = props.getProperty("youtube.key");
 
-    @Override
-    public int getTimeout() {
-        return timeout;
+        this.vkApiUrl = props.getProperty("vk.api.url");
+        this.vkApiKey = props.getProperty("vk.api.token");
+        this.vkApiVersion = props.getProperty("vk.api.version");
     }
 }
