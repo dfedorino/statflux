@@ -2,22 +2,32 @@ package com.rmrf.statflux.bot.infra.handler;
 
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
+import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.constructor.StatsMessageConstructor;
+import com.rmrf.statflux.domain.dto.VideoStatsItem;
+import com.rmrf.statflux.domain.dto.VideoStatsResponse;
+import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.message.MaybeInaccessibleMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 @Slf4j
 public class NextCallbackHandler implements Chain.Node<TelegramBotContext> {
     private final ServiceLayer serviceLayer;
+    private final Localization l10n;
 
-    public NextCallbackHandler(ServiceLayer serviceLayer) {
+    public NextCallbackHandler(ServiceLayer serviceLayer, Localization l10n) {
         this.serviceLayer = serviceLayer;
+        this.l10n = l10n;
     }
 
     @Override
@@ -31,13 +41,33 @@ public class NextCallbackHandler implements Chain.Node<TelegramBotContext> {
         log.debug("callback 'next' handling");
 
         MaybeInaccessibleMessage message = callbackQuery.getMessage();
+//                var statsResult = serviceLayer.getNextVideos(message.getChatId(), (long) message.getMessageId());
+        var statsResult = Success.of(new VideoStatsResponse(
+                Arrays.asList(
+                        new VideoStatsItem("test", "sme", "https://youtube.com/123", 3370L, ZonedDateTime.now()),
+                        new VideoStatsItem("test2", "sme2", "https://youtube.com/124", 3380L, ZonedDateTime.now()),
+                        new VideoStatsItem("test3", "sme2", "https://youtube.com/125", 3390L, ZonedDateTime.now()),
+                        new VideoStatsItem("test4", "sme2", "https://youtube.com/126", 100001L, ZonedDateTime.now()),
+                        new VideoStatsItem("Test5", "sme2", "https://youtube.com/127", 102L, ZonedDateTime.now()),
+                        new VideoStatsItem("Test7", "sme2", "https://youtube.com/128", 103L, ZonedDateTime.now()),
+                        new VideoStatsItem("test91232113", "sme2", "https://youtube.com/129", 100L, ZonedDateTime.now())
+                ),
+                10,
+                true,
+                true,
+                100000
+        ));
+        VideoStatsResponse videoStatsResponse = statsResult.get();
+
+        StatsMessageConstructor statsMessageConstructor = new StatsMessageConstructor(videoStatsResponse, l10n.stats);
         try {
             ctx.client().execute(
                     EditMessageText.builder()
                             .chatId(message.getChatId())
                             .messageId(message.getMessageId())
-                            // Прикрутить общую модель с LinkHandler и формировать базу сообщения там
-                            .text("Отредактированное сообщение")
+                            .text(statsMessageConstructor.getText())
+                            .replyMarkup(statsMessageConstructor.getMarkup())
+                            .parseMode("MarkdownV2")
                             .build()
             );
         } catch (TelegramApiException e) {

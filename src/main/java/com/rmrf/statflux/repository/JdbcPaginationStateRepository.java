@@ -5,6 +5,7 @@ import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import com.rmrf.statflux.repository.util.Queries;
 import com.rmrf.statflux.repository.query.ResultSetMapper;
 
+import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.NonNull;
@@ -41,6 +42,7 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             PaginationStateSql.UPDATE,
             state.firstSeenId(),
             state.lastSeenId(),
+//            Timestamp.from(state.updatedAt().toInstant()),
             state.updatedAt(),
             state.chatId(),
             state.messageId()
@@ -53,7 +55,8 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             state.messageId(),
             state.firstSeenId(),
             state.lastSeenId(),
-            state.updatedAt()
+//            Timestamp.from(state.updatedAt().toInstant())
+            state.updatedAt().toInstant()
         ) > 0;
     }
 }

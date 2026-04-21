@@ -1,10 +1,8 @@
 package com.rmrf.statflux;
 
 import com.rmrf.statflux.bot.core.TelegramBotRootConsumer;
-import com.rmrf.statflux.bot.infra.config.HandlerConfig;
-import com.rmrf.statflux.bot.infra.TelegramBotConfigFromEnv;
+import com.rmrf.statflux.bot.infra.config.TelegramBotConfigFromEnv;
 import com.rmrf.statflux.bot.infra.config.HandlersConfig;
-import com.rmrf.statflux.bot.infra.middleware.WhiteListMiddleware;
 import com.rmrf.statflux.bot.port.TelegramBotConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
@@ -18,11 +16,10 @@ public class Main {
 
         HandlersConfig handlersConfig = new HandlersConfig();
 
-        HandlerConfig handlerConfig = new HandlerConfig();
-
         TelegramBotRootConsumer botRootConsumer = TelegramBotRootConsumer.builder()
                 .withClient(new OkHttpTelegramClient(botConfig.getToken()))
-                .use(new WhiteListMiddleware(botConfig.getWhiteList()))
+                .use(handlersConfig.whiteListMiddleware())
+                .use(handlersConfig.uncaughtErrorMiddleware())
                 .use(handlersConfig.refreshCallbackHandler())
                 .use(handlersConfig.previousCallbackHandler())
                 .use(handlersConfig.nextCallbackHandler())
