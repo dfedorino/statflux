@@ -3,6 +3,7 @@ package com.rmrf.statflux.bot.infra.handler;
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.ReplyParameters;
@@ -18,9 +19,11 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
+    private final ServiceLayer serviceLayer;
     private final Localization.Stats localization;
 
-    public CommandStatsHandler(Localization.Stats localization) {
+    public CommandStatsHandler(ServiceLayer serviceLayer, Localization.Stats localization) {
+        this.serviceLayer = serviceLayer;
         this.localization = localization;
     }
 
@@ -32,6 +35,7 @@ public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
             next.accept(ctx);
             return;
         }
+        var stats = serviceLayer.getVideos(message.getChatId(), (long) message.getMessageId());
 
         log.debug("/stats handling");
         StringBuilder textBuilder = new StringBuilder()

@@ -1,9 +1,9 @@
 package com.rmrf.statflux;
 
 import com.rmrf.statflux.bot.core.TelegramBotRootConsumer;
+import com.rmrf.statflux.bot.infra.config.HandlerConfig;
 import com.rmrf.statflux.bot.infra.TelegramBotConfigFromEnv;
 import com.rmrf.statflux.bot.infra.handler.CommandStartHandler;
-import com.rmrf.statflux.bot.infra.handler.CommandStatsHandler;
 import com.rmrf.statflux.bot.infra.handler.DefaultHandler;
 import com.rmrf.statflux.bot.infra.handler.LinkHandler;
 import com.rmrf.statflux.bot.infra.handler.NextCallbackHandler;
@@ -24,6 +24,8 @@ public class Main {
         TelegramBotConfig botConfig = new TelegramBotConfigFromEnv();
         Localization localization = ConfigLoader.loadL10n("l10n/ru.yaml", Localization.class);
 
+        HandlerConfig handlerConfig = new HandlerConfig();
+
         TelegramBotRootConsumer botRootConsumer = TelegramBotRootConsumer.builder()
                 .withClient(new OkHttpTelegramClient(botConfig.getToken()))
                 .use(new WhiteListMiddleware(botConfig.getWhiteList()))
@@ -31,7 +33,7 @@ public class Main {
                 .use(new PreviousCallbackHandler())
                 .use(new NextCallbackHandler())
                 .use(new CommandStartHandler(localization.start))
-                .use(new CommandStatsHandler(localization.stats))
+                .use(handlerConfig.linkHandler())
                 .use(new LinkHandler(localization.link))
                 .use(new DefaultHandler(localization.common))
                 .build();
