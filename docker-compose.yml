@@ -35,10 +35,15 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-statflux_db}
       DB_USER: ${POSTGRES_USER:-statflux}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      # интеграции пока опционально (:-). Когда появятся, поменять на :?
-      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
-      VK_VIDEO_ACCESS_TOKEN: ${VK_VIDEO_ACCESS_TOKEN:-}
-      RUTUBE_ACCESS_TOKEN: ${RUTUBE_ACCESS_TOKEN:-}
+
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:?YOUTUBE_API_KEY is required}
+
+      VK_API_URL: ${VK_API_URL:?VK_API_URL is required}
+      VK_API_TOKEN: ${VK_API_TOKEN:?VK_API_TOKEN is required}
+      VK_API_VERSION: ${VK_API_VERSION:?VK_API_VERSION is required}
+
+      RUTUBE_ACCESS_TOKEN: ${RUTUBE_ACCESS_TOKEN:?RUTUBE_ACCESS_TOKEN is required}
+
       REFRESH_INTERVAL_SECONDS: ${REFRESH_INTERVAL_SECONDS:-60}
 
 volumes:
