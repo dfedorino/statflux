@@ -2,20 +2,33 @@ package com.rmrf.statflux.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.dockerjava.api.model.Repository;
+import com.rmrf.statflux.AbstractIntegrationTest;
+import com.rmrf.statflux.repository.config.RepositoryConfig;
 import com.rmrf.statflux.repository.dto.LinkDto;
+import com.rmrf.statflux.repository.transaction.TransactionManager;
+import com.rmrf.statflux.repository.util.Queries;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class LinkRepositoryIT extends BaseRepositoryTest{
-
+public class LinkRepositoryIT extends AbstractIntegrationTest {
+    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
+    private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
     private LinkRepository linkRepository;
 
     @BeforeEach
     public void setup() {
         linkRepository = repositoryConfig.linkRepository();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        tx.executeWithoutResult(
+            () -> Queries.update("TRUNCATE TABLE links RESTART IDENTITY CASCADE"));
     }
 
     @Test

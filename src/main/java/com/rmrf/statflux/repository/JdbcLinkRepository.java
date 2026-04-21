@@ -34,7 +34,6 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.title(),
             linkDto.views(),
             Timestamp.from(linkDto.updatedAt().toInstant()),
-//            linkDto.updatedAt(),
             linkDto.hostingName(),
             linkDto.hostingId());
 
@@ -46,7 +45,6 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.title(),
             linkDto.views(),
             Timestamp.from(linkDto.updatedAt().toInstant())
-//            linkDto.updatedAt()
         ) > 0;
     }
 

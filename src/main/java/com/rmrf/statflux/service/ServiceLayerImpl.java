@@ -116,8 +116,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var totalLinks = linkRepository.getTotalLinkCount();
                 var totalViews = linkRepository.getTotalViewSum();
 
-                var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
-                var lastSeenId = items.isEmpty() ? videosPerPage : items.getLast().id();
+                var firstSeenId = items.isEmpty() ? null : items.getFirst().id();
+                var lastSeenId = items.isEmpty() ? null : items.getLast().id();
                 var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
                     ZonedDateTime.now(ZoneOffset.UTC));
                 paginationStateRepository.save(state);

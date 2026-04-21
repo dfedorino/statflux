@@ -25,6 +25,18 @@
         <postgresql-postgresql.version>42.7.10</postgresql-postgresql.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.21.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -64,6 +76,18 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito-core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.testcontainers/postgresql -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.testcontainers/junit-jupiter -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -162,8 +186,33 @@
                         <REFRESH_DELAY_MS>50</REFRESH_DELAY_MS>
                         <PAGE_SIZE>5</PAGE_SIZE>
                         <POOL_SIZE>5</POOL_SIZE>
+                        <VK_API_URL>https://api.vk.com</VK_API_URL>
+                        <VK_API_TOKEN>your_vk_api_token</VK_API_TOKEN>
+                        <VK_API_VERSION>5.199</VK_API_VERSION>
                     </environmentVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+
+                <configuration>
+                    <environmentVariables>
+                        <DB_USER>${DB_USER}</DB_USER>
+                        <DB_PASSWORD>${DB_PASSWORD}</DB_PASSWORD>
+                        <DB_NAME>${DB_NAME}</DB_NAME>
+                    </environmentVariables>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -191,4 +240,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>integration-test</id>
+
+            <properties>
+                <DB_NAME>statflux_db</DB_NAME>
+                <DB_USER>statflux</DB_USER>
+                <DB_PASSWORD>statflux</DB_PASSWORD>
+            </properties>
+        </profile>
+    </profiles>
 </project>

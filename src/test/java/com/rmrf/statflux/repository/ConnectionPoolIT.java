@@ -2,6 +2,7 @@ package com.rmrf.statflux.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rmrf.statflux.AbstractIntegrationTest;
 import com.rmrf.statflux.repository.config.RepositoryConfig;
 import com.rmrf.statflux.repository.datasource.DataSource;
 import com.rmrf.statflux.repository.dto.LinkDto;
@@ -17,24 +18,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class ConnectionPoolIT {
+public class ConnectionPoolIT extends AbstractIntegrationTest {
 
-    private DataSource dataSource;
     private LinkRepository linkRepository;
     private TransactionManager tx;
 
     @BeforeEach
     public void setup() {
         RepositoryConfig repositoryConfig = new RepositoryConfig();
-        dataSource = repositoryConfig.pooledDataSource();
         linkRepository = repositoryConfig.linkRepository();
-        tx = new TransactionManager(dataSource);
+        tx = new TransactionManager(repositoryConfig.pooledDataSource());
         tx.executeWithoutResult(() -> SqlScripts.run("schema.sql"));
-    }
-
-    @AfterEach
-    public void tearDown() {
-        dataSource.close();
     }
 
     @Test
