@@ -1,4 +1,4 @@
-package com.rmrf.statflux;
+package com.rmrf.statflux.integration;
 
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.domain.result.Result;

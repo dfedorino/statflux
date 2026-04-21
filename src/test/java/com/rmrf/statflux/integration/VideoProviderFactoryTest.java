@@ -1,12 +1,11 @@
-package com.rmrf.statflux;
+package com.rmrf.statflux.integration;
 
-import static com.rmrf.statflux.Stubs.vkStub;
-import static com.rmrf.statflux.Stubs.youtubeStub;
+import static com.rmrf.statflux.integration.Stubs.vkStub;
+import static com.rmrf.statflux.integration.Stubs.youtubeStub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rmrf.statflux.domain.exceptions.BadUrlException;
 import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
-import com.rmrf.statflux.integration.VideoProviderFactory;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -6,7 +6,7 @@ import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.integration.utils.SimpleHttpClient;
-import com.rmrf.statflux.integration.vk.parser.VkVideoMetadataParser;
+import com.rmrf.statflux.integration.vk.parser.VkVideoMetadataJsonParser;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +40,7 @@ public class VkVideoProviderImpl implements VkVideoProvider {
     /**
      * VkVideoMetadataParser объект.
      */
-    private final VkVideoMetadataParser parser = new VkVideoMetadataParser();
+    private final VkVideoMetadataJsonParser parser = new VkVideoMetadataJsonParser();
 
     /**
      * VkVideoStatsProviderImpl конструктор.
@@ -60,6 +60,20 @@ public class VkVideoProviderImpl implements VkVideoProvider {
         this.token = Objects.requireNonNull(token);
         this.apiVersion = Objects.requireNonNull(apiVersion);
         this.httpClient = Objects.requireNonNull(httpClient);
+    }
+
+    /**
+     * Получить информацию о статистике просмотров, название и ID видео в объекте {@link Result},
+     * содержащем {@link VideoMetadataResponse}.
+     *
+     * @param id ID видео.
+     * @return объект {@link Result}, содержащем {@link VideoMetadataResponse}.
+     */
+    @Override
+    public @NonNull Result<VideoMetadataResponse> metadataById(String id) {
+        log.debug("Input video Id: id={}", id);
+
+        return this.getStatistic(id);
     }
 
     /**
@@ -109,7 +123,7 @@ public class VkVideoProviderImpl implements VkVideoProvider {
         }
 
         try {
-            List<VideoMetadataResponse> parsed = parser.parse(json);
+            List<VideoMetadataResponse> parsed = this.parser.parse(json);
 
             return Success.of(
                 parsed != null ? parsed : List.of()
@@ -117,6 +131,50 @@ public class VkVideoProviderImpl implements VkVideoProvider {
         } catch (Exception e) {
             log.error("Failed to parse vk response. ids={}", ids, e);
             return Failure.of(e);
+        }
+    }
+
+    /**
+     * Получает статистику по идентификатору видео.
+     *
+     * @param id ID видео.
+     * @return объект {@link Result}, внутри которого - {@link VideoMetadataResponse}.
+     */
+    private Result<VideoMetadataResponse> getStatistic(String id) {
+        Result<String> jsonResult = this.fetchStatisticsJson(id);
+
+        if (jsonResult.isFailure()) {
+            return Failure.of(
+                jsonResult.asFailure().exception()
+            );
+        }
+
+        String json = jsonResult.get();
+        log.debug("vk response: {}", json);
+
+        if (json == null || json.isBlank()) {
+            return Failure.of(
+                new Exception("VK video not found: " + id)
+            );
+        }
+
+        try {
+            List<VideoMetadataResponse> parsed = this.parser.parse(json);
+
+            log.debug("parsed data: {}", parsed);
+
+            if (parsed != null && !parsed.isEmpty()) {
+                return Success.of(parsed.getFirst());
+            }
+
+            return Failure.of(
+                new Exception(
+                    "VK parse returned empty result for id=" + id + "; parsed data=" + parsed
+                )
+            );
+        } catch (Exception exception) {
+            log.error("Failed to parse vk response. id={}", id, exception);
+            return Failure.of(exception);
         }
     }
 
@@ -140,13 +198,12 @@ public class VkVideoProviderImpl implements VkVideoProvider {
      */
     private Result<String> fetchStatisticsJson(String idsParam) {
         try {
-            String response = this.httpClient.get(
-                this.makeUrl(idsParam),
-                Map.of("Authorization", "Bearer " + this.token)
+            return Success.of(
+                this.httpClient.get(
+                    this.makeUrl(idsParam),
+                    Map.of("Authorization", "Bearer " + this.token)
+                )
             );
-
-            return Success.of(response);
-
         } catch (Exception exception) {
             log.error("Failed to fetch statistics. ids={}", idsParam, exception);
             return Failure.of(exception);
@@ -166,25 +223,6 @@ public class VkVideoProviderImpl implements VkVideoProvider {
         );
     }
 
-    @Deprecated
-    @Override
-    public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
-
-        // TODO: убрать
-        return null;
-    }
-
-    @Override
-    public @NonNull Result<VideoMetadataResponse> metadataById(String id) {
-        // TODO: НЕ ФИНАЛ! переделать под один объект
-
-        return Success.of(
-            this.getStatistic(
-                List.of(id)
-            ).get().getFirst()
-        );
-    }
-
     /**
      * Возвращает название провайдера.
      *
@@ -193,5 +231,21 @@ public class VkVideoProviderImpl implements VkVideoProvider {
     @Override
     public @NonNull String hostingName() {
         return Platform.VK.getDisplayName();
+    }
+
+
+
+
+
+
+
+
+
+    @Deprecated
+    @Override
+    public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
+
+        // TODO: убрать
+        return null;
     }
 }

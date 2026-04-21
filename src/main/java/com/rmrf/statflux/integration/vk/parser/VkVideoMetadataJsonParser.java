@@ -10,7 +10,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class VkVideoMetadataParser {
+public class VkVideoMetadataJsonParser {
 
     /**
      * Фабрика JSON для создания потокового парсера Jackson.
@@ -98,7 +98,6 @@ public class VkVideoMetadataParser {
             }
 
             return result == null || result.isEmpty() ? List.of() : result;
-
         } catch (IOException exception) {
             log.error("Ошибка парсинга JSON VK API", exception);
             throw new IllegalArgumentException("Некорректный JSON VK видео", exception);
