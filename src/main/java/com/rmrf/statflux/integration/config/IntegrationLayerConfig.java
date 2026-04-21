@@ -19,7 +19,7 @@ public class IntegrationLayerConfig {
 
     public IntegrationLayerConfig(IntegrationConfig config) {
         this.simpleHttpClient = new SimpleHttpClient(config.getTimeout());
-        this.youTubeVideoProvider = new YouTubeVideoProviderImpl(config.getApiKey(), simpleHttpClient);
+        this.youTubeVideoProvider = new YouTubeVideoProviderImpl(config.getYouTubeApiKey(), simpleHttpClient);
         this.vkVideoProvider = new VkVideoProviderImpl(config.getVkApiUrl(), config.getVkApiKey(), config.getVkApiVersion(), simpleHttpClient);
         this.providerFactory = new VideoProviderFactory(youTubeVideoProvider, vkVideoProvider);
     }

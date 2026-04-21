@@ -1,27 +1,42 @@
 package com.rmrf.statflux.integration.config;
 
-import com.rmrf.statflux.common.ConfigLoader;
-import java.util.Properties;
-import lombok.Getter;
-
 /**
- * Параметры для слоя integration из application.properties
+ * Общий контракт конфигурации интеграционного слоя.
  */
-@Getter
-public class IntegrationConfig {
+public interface IntegrationConfig {
 
-    private final String apiKey;
-    private final int timeout;
-    private final String vkApiKey;
-    private final String vkApiUrl;
-    private final String vkApiVersion;
+    /**
+     * Возвращает таймаут HTTP-запросов.
+     *
+     * @return таймаут в секундах
+     */
+    int getTimeout();
 
-    public IntegrationConfig() {
-        Properties props = ConfigLoader.load("application.properties");
-        this.apiKey = props.getProperty("youtube.key");
-        this.vkApiKey = props.getProperty("vk.api.token");
-        this.vkApiUrl = props.getProperty("vk.api.url");
-        this.vkApiVersion = props.getProperty("vk.api.version");
-        this.timeout = Integer.parseInt(props.getProperty("http.timeout", "15"));
-    }
+    /**
+     * Возвращает API-ключ для YouTube.
+     *
+     * @return API-ключ или {@code null}, если не задан
+     */
+    String getYouTubeApiKey();
+
+    /**
+     * Возвращает базовый URL VK API.
+     *
+     * @return URL VK API (не {@code null})
+     */
+    String getVkApiUrl();
+
+    /**
+     * Возвращает токен доступа VK API.
+     *
+     * @return токен VK API (не {@code null})
+     */
+    String getVkApiKey();
+
+    /**
+     * Возвращает версию VK API.
+     *
+     * @return версия VK API (не {@code null})
+     */
+    String getVkApiVersion();
 }

@@ -31,13 +31,13 @@ class VkVideoProviderImplTest {
      */
     @BeforeEach
     void setUp() {
-        httpClient = Mockito.mock(SimpleHttpClient.class);
+        this.httpClient = Mockito.mock(SimpleHttpClient.class);
 
         String baseUrl = "https://api.vk.com";
         String token = "test-token";
         String apiVersion = "5.199";
 
-        provider = new VkVideoProviderImpl(baseUrl, token, apiVersion, httpClient);
+        this.provider = new VkVideoProviderImpl(baseUrl, token, apiVersion, httpClient);
     }
 
     /**
