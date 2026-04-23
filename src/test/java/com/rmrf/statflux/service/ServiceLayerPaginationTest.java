@@ -65,7 +65,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
-        assertEquals(VIDEO_COUNT, resp.totalVideos());
+        assertEquals(VIDEO_COUNT, resp.getTotalVideos());
 
         var paginationState = tx.execute(
             () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
@@ -78,7 +78,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
-        assertEquals(VIDEO_COUNT, resp.totalVideos());
+        assertEquals(VIDEO_COUNT, resp.getTotalVideos());
 
         var paginationState = tx.execute(
             () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
@@ -88,13 +88,13 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var nextPageResp = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(nextPageResp.hasPrev());
         assertTrue(nextPageResp.hasNext());
-        assertThat(nextPageResp.items()).extracting(VideoStatsItem::id)
+        assertThat(nextPageResp.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("6", "7", "8", "9", "10");
 
         var nextNextPageResp = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(nextNextPageResp.hasPrev());
         assertTrue(nextNextPageResp.hasNext());
-        assertThat(nextNextPageResp.items()).extracting(VideoStatsItem::id)
+        assertThat(nextNextPageResp.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("11", "12", "13", "14", "15");
     }
 
@@ -103,7 +103,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
-        assertEquals(VIDEO_COUNT, resp.totalVideos());
+        assertEquals(VIDEO_COUNT, resp.getTotalVideos());
 
         var paginationState = tx.execute(
             () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
@@ -117,7 +117,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
 
         var previousPageResp = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
 
-        assertThat(previousPageResp.items()).extracting(VideoStatsItem::id)
+        assertThat(previousPageResp.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("16", "17", "18", "19", "20");
     }
 
@@ -126,7 +126,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         var resp = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
         assertTrue(resp.hasNext());
         assertFalse(resp.hasPrev());
-        assertEquals(VIDEO_COUNT, resp.totalVideos());
+        assertEquals(VIDEO_COUNT, resp.getTotalVideos());
 
         var paginationState = tx.execute(
             () -> paginationStateRepository.find(USER_ID, MESSAGE_ID).get());
@@ -158,7 +158,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         }
 
         assertTrue(lastResp.hasPrev());
-        assertThat(lastResp.items()).extracting(VideoStatsItem::id)
+        assertThat(lastResp.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("26", "27", "28", "29", "30");
         assertFalse(lastResp.hasNext());
     }
@@ -177,7 +177,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         }
 
         assertFalse(lastResp.hasPrev());
-        assertThat(lastResp.items()).extracting(VideoStatsItem::id)
+        assertThat(lastResp.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("1", "2", "3", "4", "5");
         assertTrue(lastResp.hasNext());
     }
@@ -222,7 +222,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         assertThat(responseEither).isInstanceOf(Success.class);
         var response = responseEither.get();
 
-        assertThat(response.items()).extracting(VideoStatsItem::id)
+        assertThat(response.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("11", "12", "13", "14", "15");
         assertTrue(response.hasErrors());
     }
@@ -250,7 +250,7 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
         assertThat(responseEither).isInstanceOf(Success.class);
         var response = responseEither.get();
 
-        assertThat(response.items()).extracting(VideoStatsItem::id)
+        assertThat(response.getItems()).extracting(VideoStatsItem::id)
             .containsExactly("11", "12", "13", "14", "15");
         assertTrue(response.hasErrors());
 

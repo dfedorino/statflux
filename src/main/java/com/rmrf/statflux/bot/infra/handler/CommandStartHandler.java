@@ -5,8 +5,8 @@ import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+    import org.telegram.telegrambots.meta.api.objects.message.Message;
+    import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.function.Consumer;
 
