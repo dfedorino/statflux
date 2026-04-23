@@ -3,6 +3,7 @@ package com.rmrf.statflux.bot.infra.handler;
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.ReplyParameters;
@@ -13,9 +14,11 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class LinkHandler implements Chain.Node<TelegramBotContext> {
+    private final ServiceLayer serviceLayer;
     private final Localization.Link localization;
 
-    public LinkHandler(Localization.Link localization) {
+    public LinkHandler(ServiceLayer serviceLayer, Localization.Link localization) {
+        this.serviceLayer = serviceLayer;
         this.localization = localization;
     }
 
