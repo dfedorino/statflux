@@ -8,6 +8,7 @@ import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.integration.utils.SimpleHttpClient;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +97,7 @@ class VkVideoProviderImplTest {
     }
 
     /**
-     * Тест корректной работы в методе metadataById.
+     * Тест корректной работы в методе metadataByIds.
      */
     @Test
     void metadataByIds_success() throws IOException, InterruptedException {
@@ -123,6 +124,97 @@ class VkVideoProviderImplTest {
     }
 
     /**
+     * Тест асинхронной обработки батчей (> 50 элементов).
+     */
+    @Test
+    void metadataByIds_async_batches_success() throws Exception {
+
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < 120; i++) {
+            ids.add("-1_" + i);
+        }
+
+        String json = """
+        {
+          "response": {
+            "items": [
+              { "owner_id": -1, "id": 1, "title": "video", "views": 10 }
+            ]
+          }
+        }
+        """;
+
+        when(httpClient.get(Mockito.anyString(), Mockito.anyMap()))
+            .thenReturn(json);
+
+        Result<List<VideoMetadataResponse>> result =
+            provider.metadataByIds(ids);
+
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isNotEmpty();
+    }
+
+    /**
+     * Тест параллельного выполнения батчей (проверка, что не падает при async).
+     */
+    @Test
+    void metadataByIds_async_parallel_execution() throws IOException, InterruptedException {
+
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < 200; i++) {
+            ids.add("-1_" + i);
+        }
+
+        String json = """
+        {
+          "response": {
+            "items": [
+              { "owner_id": -1, "id": 1, "title": "video", "views": 10 }
+            ]
+          }
+        }
+        """;
+
+        when(httpClient.get(Mockito.anyString(), Mockito.anyMap()))
+            .thenReturn(json);
+
+        Result<List<VideoMetadataResponse>> result =
+            provider.metadataByIds(ids);
+
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isNotNull();
+    }
+
+    /**
+     * Тест ошибки в одном из батчей (async failure propagation).
+     */
+    @Test
+    void metadataByIds_async_failure_propagation() throws IOException, InterruptedException {
+
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < 120; i++) {
+            ids.add("-1_" + i);
+        }
+
+        when(httpClient.get(Mockito.anyString(), Mockito.anyMap()))
+            .thenReturn("""
+            {
+              "response": {
+                "items": [
+                  { "owner_id": -1, "id": 1, "title": "video", "views": 10 }
+                ]
+              }
+            }
+            """)
+            .thenThrow(new RuntimeException("VK error"));
+
+        Result<List<VideoMetadataResponse>> result =
+            provider.metadataByIds(ids);
+
+        assertThat(result.isFailure()).isTrue();
+    }
+
+    /**
      * Тест обработки пустого JSON в методе metadataByIds.
      */
     @Test
@@ -130,8 +222,7 @@ class VkVideoProviderImplTest {
         Result<List<VideoMetadataResponse>> result =
             provider.metadataByIds(List.of());
 
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(result.get()).isEmpty();
+        assertThat(result.isFailure()).isTrue();
     }
 
     /**
@@ -142,8 +233,7 @@ class VkVideoProviderImplTest {
         Result<List<VideoMetadataResponse>> result =
             provider.metadataByIds(Arrays.asList(null, null));
 
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(result.get()).isEmpty();
+        assertThat(result.isFailure()).isTrue();
     }
 
     /**
@@ -168,4 +258,41 @@ class VkVideoProviderImplTest {
         assertThat(provider.hostingName())
             .isEqualTo(Platform.VK.getDisplayName());
     }
+
+//    /**
+//     * Реальный интеграционный тест VK API.
+//     * Требует валидный токен и доступ к VK API.
+//     */
+//    @Test
+//    void metadataByIds_real_async_100_items() throws Exception {
+//
+//        VkVideoProviderImpl realProvider = new VkVideoProviderImpl(
+//            "https://api.vk.com",
+//            "TOKEN",
+//            "5.199",
+//            new SimpleHttpClient()
+//        );
+//
+//        List<String> ids = new ArrayList<>();
+//
+//        for (int i = 0; i < 2000; i++) {
+//            ids.add("-162487901_456239088");
+//        }
+//
+//        Result<List<VideoMetadataResponse>> result =
+//            realProvider.metadataByIds(ids);
+//
+//        System.out.println(result.get().size());
+//
+//        assertThat(result.isSuccess()).isTrue();
+//
+//        assertThat(result.get())
+//            .isNotNull()
+//            .isNotEmpty();
+//
+//        VideoMetadataResponse first = result.get().getFirst();
+//
+//        assertThat(first.id()).isEqualTo("-162487901_456239088");
+//        assertThat(first.views()).isGreaterThanOrEqualTo(0);
+//    }
 }
