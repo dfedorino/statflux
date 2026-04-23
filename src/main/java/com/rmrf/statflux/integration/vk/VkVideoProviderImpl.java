@@ -6,6 +6,7 @@ import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.integration.utils.SimpleHttpClient;
+import com.rmrf.statflux.integration.vk.parser.VkUrlParser;
 import com.rmrf.statflux.integration.vk.parser.VkVideoMetadataJsonParser;
 import java.util.ArrayList;
 import java.util.List;
@@ -320,6 +321,6 @@ public class VkVideoProviderImpl implements VkVideoProvider {
     @Deprecated
     @Override
     public @NonNull Result<VideoMetadataResponse> metadataByLink(String rawLink) {
-        return Failure.of(new UnsupportedOperationException("Deprecated"));
+        return metadataById(VkUrlParser.extractId(rawLink));
     }
 }

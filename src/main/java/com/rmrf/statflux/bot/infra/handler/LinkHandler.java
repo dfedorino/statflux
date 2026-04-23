@@ -3,6 +3,7 @@ package com.rmrf.statflux.bot.infra.handler;
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -32,29 +33,32 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
         }
 
         String link = ctx.update().getMessage().getText();
-        log.debug("link '{}' handling", link);
-        if (link.startsWith("https://rutube.ru")) {
-            handleSuccess(ctx, link);
-            return;
-        }
-        if (link.startsWith("https://youtube.com")) {
-            handleSuccess(ctx, link);
+        var responseResult = serviceLayer.addVideo(link);
+        if (responseResult.isFailure()) {
+            handleIncorrect(ctx);
             return;
         }
 
-        handleIncorrect(ctx);
+        handleSuccess(ctx, responseResult.get());
     }
 
-    private void handleSuccess(TelegramBotContext ctx, String link) {
+    private void handleSuccess(TelegramBotContext ctx, AddVideoResponse response) {
         Message message = ctx.update().getMessage();
 
         String text = new StringBuilder()
-                .append(localization.videoStatistics)
+                .append(localization.videoAddedSuccessfully)
+                .append(Localization.DOUBLE_CARRY)
+                .append('[')
+                .append(response.title())
+                .append(']')
+                .append('(')
+                .append(response.rawUrl())
+                .append(')')
+                .append(Localization.DOUBLE_CARRY)
+                .append(localization.views)
                 .append(' ')
-                // Временно
-                .append(link)
-                .append('\n')
-                .append('\n')
+                .append(response.views())
+                .append(Localization.DOUBLE_CARRY)
                 .append(localization.statsMotivationText)
                 .toString();
 
@@ -63,6 +67,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
                     SendMessage.builder()
                             .chatId(message.getChatId())
                             .text(text)
+                            .parseMode("MarkdownV2")
                             .replyParameters(
                                     ReplyParameters.builder()
                                             .messageId(message.getMessageId())
@@ -82,7 +87,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
             ctx.client().execute(
                     SendMessage.builder()
                             .chatId(message.getChatId())
-                            .text(localization.incorrect)
+                            .text(localization.error)
                             .replyParameters(
                                     ReplyParameters.builder()
                                             .messageId(message.getMessageId())
