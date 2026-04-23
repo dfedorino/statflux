@@ -12,5 +12,4 @@ import lombok.NonNull;
  */
 public record VideoStatsItem(@NonNull String id, @NonNull String name, @NonNull String rawUrl,
                              @NonNull Long views, @NonNull ZonedDateTime updatedAt) {
-
 }

@@ -12,6 +12,8 @@ public class Localization {
 
     public static class Stats {
         public String introduction;
+        public String views;
+        public String updatedAt;
         public String totalViews;
         public String totalLinkCount;
         public String refresh;
@@ -26,5 +28,6 @@ public class Localization {
 
     public static class Common {
         public String useKnownCommands;
+        public String uncaughtError;
     }
 }

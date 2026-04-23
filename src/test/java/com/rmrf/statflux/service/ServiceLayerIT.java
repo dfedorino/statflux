@@ -64,7 +64,7 @@ public class ServiceLayerIT extends BaseRepositoryTest {
         assertThat(foundLinks.isSuccess()).isTrue();
         var found = foundLinks.get();
 
-        assertThat(found.items())
+        assertThat(found.getItems())
             .hasSize(1)
             .first()
             .satisfies(link -> {
@@ -75,8 +75,8 @@ public class ServiceLayerIT extends BaseRepositoryTest {
             });
         assertThat(found.hasNext()).isFalse();
         assertThat(found.hasPrev()).isFalse();
-        assertThat(found.totalVideos()).isOne();
-        assertThat(found.totalViews()).isEqualTo(views);
+        assertThat(found.getTotalVideos()).isOne();
+        assertThat(found.getTotalViews()).isEqualTo(views);
 
     }
 
