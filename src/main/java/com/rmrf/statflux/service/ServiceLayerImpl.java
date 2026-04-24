@@ -244,7 +244,6 @@ public class ServiceLayerImpl implements ServiceLayer {
     @Override
     public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback) {
-        // TODO: переписать с использованием metadataByIds
         final Consumer<Result<RefreshVideosPagedResponse>> cb =
             callback != null ? callback : result -> {
             };
@@ -264,7 +263,7 @@ public class ServiceLayerImpl implements ServiceLayer {
             videosByHosting.forEach((hosting, vs) -> {
                 var platformName = vs.getFirst().hostingName();
                 try {
-                    var platform = Platform.valueOf(platformName);
+                    var platform = Platform.valueOf(platformName.toUpperCase());
                     var hostingApiEither = hostingApiFactory.forPlatform(platform);
                     if (hostingApiEither.isFailure()) {
                         log.error(
@@ -296,7 +295,11 @@ public class ServiceLayerImpl implements ServiceLayer {
                                     }
                                 });
                             }
-                            videosByHostingIds.values().forEach(linkRepository::save);
+
+                            txManager.execute(() -> {
+                                videosByHostingIds.values().forEach(linkRepository::save);
+                                return null;
+                            });
                         }
                         default -> hasErrors.set(true);
                     }
