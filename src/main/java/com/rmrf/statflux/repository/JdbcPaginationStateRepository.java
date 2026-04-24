@@ -42,8 +42,8 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             PaginationStateSql.UPDATE,
             state.firstSeenId(),
             state.lastSeenId(),
-//            Timestamp.from(state.updatedAt().toInstant()),
-            state.updatedAt(),
+            Timestamp.from(state.updatedAt().toInstant()),
+//            state.updatedAt(),
             state.chatId(),
             state.messageId()
 
@@ -55,8 +55,8 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             state.messageId(),
             state.firstSeenId(),
             state.lastSeenId(),
-//            Timestamp.from(state.updatedAt().toInstant())
-            state.updatedAt().toInstant()
+            Timestamp.from(state.updatedAt().toInstant())
+//            state.updatedAt().toInstant()
         ) > 0;
     }
 }
