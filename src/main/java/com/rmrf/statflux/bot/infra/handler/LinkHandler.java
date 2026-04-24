@@ -3,6 +3,7 @@ package com.rmrf.statflux.bot.infra.handler;
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.bot.infra.util.TelegramBotFormatter;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
                 .append(localization.videoAddedSuccessfully)
                 .append(Localization.DOUBLE_CARRY)
                 .append('[')
-                .append(response.title())
+                .append(TelegramBotFormatter.escapeSpecial(response.title()))
                 .append(']')
                 .append('(')
                 .append(response.rawUrl())

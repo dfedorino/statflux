@@ -7,7 +7,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractIntegrationTest {
 
     @Container
@@ -17,14 +16,6 @@ public abstract class AbstractIntegrationTest {
             .withUsername("statflux")
             .withPassword("statflux")
             .withInitScript("schema.sql");
-
-//    static {
-//        POSTGRES.start();
-//
-//        System.setProperty("DB_URL", POSTGRES.getJdbcUrl());
-//        System.setProperty("DB_USER", POSTGRES.getUsername());
-//        System.setProperty("DB_PASSWORD", POSTGRES.getPassword());
-//    }
 
     @BeforeAll
     static void init() {

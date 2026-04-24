@@ -202,6 +202,9 @@
                         <DB_USER>${DB_USER}</DB_USER>
                         <DB_PASSWORD>${DB_PASSWORD}</DB_PASSWORD>
                         <DB_NAME>${DB_NAME}</DB_NAME>
+                        <POOL_SIZE>5</POOL_SIZE>
+                        <PAGE_SIZE>5</PAGE_SIZE>
+                        <REFRESH_DELAY_MS>60</REFRESH_DELAY_MS>
                     </environmentVariables>
                 </configuration>
 

@@ -34,7 +34,7 @@ public class ServiceLayerIT extends AbstractIntegrationTest {
         long views = 12345L;
         String hostingId = "dQw4w9WgXcQ";
 
-        given(mockHostingApi.metadataById(anyString()))
+        given(mockHostingApi.metadataByLink(anyString()))
             .willReturn(Success.of(new VideoMetadataResponse(
                 hostingId, title, views
             )));
