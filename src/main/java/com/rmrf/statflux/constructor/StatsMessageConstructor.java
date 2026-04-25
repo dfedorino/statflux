@@ -20,9 +20,12 @@ public class StatsMessageConstructor {
     public String getText() {
         StringBuilder videosStatsInfo = new StringBuilder();
         for (VideoStatsItem video : statsResponse.getItems()) {
-            videosStatsInfo = videosStatsInfo.append(video.name())
-                    .append(":\n")
-                    .append(video.rawUrl())
+            videosStatsInfo = videosStatsInfo.append('[')
+                    .append(TelegramBotFormatter.escapeSpecial(video.name()))
+                    .append(']')
+                    .append('(')
+                    .append(TelegramBotFormatter.escapeSpecial(video.rawUrl()))
+                    .append(')')
                     .append('\n')
                     .append('_')
                     .append(l10n.views)
@@ -34,11 +37,11 @@ public class StatsMessageConstructor {
         }
 
         String text = new StringBuilder()
-                .append(l10n.introduction)
+                .append(TelegramBotFormatter.escapeSpecial(l10n.introduction))
                 .append('\n')
                 .append('\n')
                 .append(videosStatsInfo)
-                .append("------------------")
+                .append(TelegramBotFormatter.escapeSpecial("------------------"))
                 .append('\n')
                 .append(l10n.totalViews)
                 .append(' ')
@@ -49,7 +52,7 @@ public class StatsMessageConstructor {
                 .append(statsResponse.getTotalVideos())
                 .toString();
 
-        return TelegramBotFormatter.escapeSpecial(text);
+        return text;
     }
 
     public InlineKeyboardMarkup getMarkup() {

@@ -10,10 +10,13 @@ public class TelegramBotFormatter {
             .replace("!", "\\!")
             .replace("=", "\\=")
             .replace("-", "\\-")
+            .replace("–", "\\–")
             .replace("+", "\\+")
             .replace("(", "\\(")
             .replace(")", "\\)")
             .replace(":", "\\:")
-            .replace("_", "\\_");
+            .replace("_", "\\_")
+            .replace("|", "\\|")
+            .replace("#", "\\#");
     }
 }

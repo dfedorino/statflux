@@ -8,7 +8,6 @@ import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.service.ServiceLayer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.ReplyParameters;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -37,18 +36,40 @@ public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
         var statsResult = serviceLayer.getVideos(message.getChatId(), (long) message.getMessageId());
         VideoStatsResponse videoStatsResponse = statsResult.get();
 
+        if (videoStatsResponse.getItems().isEmpty() && videoStatsResponse.getTotalVideos() == 0) {
+            handleNoVideosFailure(ctx);
+            return;
+        }
+
+        handleSuccess(ctx, videoStatsResponse);
+    }
+
+    private void handleSuccess(TelegramBotContext ctx, VideoStatsResponse videoStatsResponse) {
+        Message message = ctx.update().getMessage();
+
         StatsMessageConstructor messageConstructor = new StatsMessageConstructor(videoStatsResponse, l10n.stats);
         SendMessage responseMessage = SendMessage.builder()
-                .chatId(ctx.update().getMessage().getChatId())
-                .replyParameters(ReplyParameters.builder()
-                        .messageId(ctx.update().getMessage().getMessageId())
-                        .build()
-                )
+                .chatId(message.getChatId())
+                .replyToMessageId(message.getMessageId())
                 .text(messageConstructor.getText())
                 .parseMode("MarkdownV2")
                 .replyMarkup(messageConstructor.getMarkup())
                 .build();
+        try {
+            ctx.client().execute(responseMessage);
+        } catch (TelegramApiException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
 
+    private void handleNoVideosFailure(TelegramBotContext ctx) {
+        Message message = ctx.update().getMessage();
+
+        SendMessage responseMessage = SendMessage.builder()
+                .chatId(message.getChatId())
+                .replyToMessageId(message.getMessageId())
+                .text(l10n.stats.noVideos)
+                .build();
         try {
             ctx.client().execute(responseMessage);
         } catch (TelegramApiException e) {
