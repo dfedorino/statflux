@@ -273,7 +273,8 @@ public class ServiceLayerImpl implements ServiceLayer {
             }
             final var hasErrorsFinal = hasErrors;
             var response = txManager.execute(() -> {
-                var maybePaginationState = paginationStateRepository.find(userId, messageId);
+                var maybePaginationState = paginationStateRepository.find(userId, messageId)
+                    .or(() -> paginationStateRepository.find(userId, messageId - 1));
                 var firstSeenId =
                     maybePaginationState.isPresent() ? maybePaginationState.get().firstSeenId()
                         : 1L;
