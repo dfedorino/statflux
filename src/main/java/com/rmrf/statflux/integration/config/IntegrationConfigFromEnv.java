@@ -34,6 +34,11 @@ public class IntegrationConfigFromEnv implements IntegrationConfig {
     private final String vkApiVersion;
 
     /**
+     * Базовый URL RuTube API.
+     */
+    private final String rutubeApiUrl;
+
+    /**
      * IntegrationConfigFromEnv конструктор.
      */
     public IntegrationConfigFromEnv() {
@@ -44,6 +49,8 @@ public class IntegrationConfigFromEnv implements IntegrationConfig {
         this.vkApiUrl = this.requireEnv("VK_API_URL");
         this.vkApiKey = this.requireEnv("VK_API_TOKEN");
         this.vkApiVersion = this.requireEnv("VK_API_VERSION");
+
+        this.rutubeApiUrl = System.getenv("RUTUBE_API_URL");
     }
 
     /**
