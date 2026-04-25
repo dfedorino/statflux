@@ -1,5 +1,6 @@
 package com.rmrf.statflux.service;
 
+import com.rmrf.statflux.domain.constant.Platform;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
@@ -20,9 +21,12 @@ import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -239,7 +243,6 @@ public class ServiceLayerImpl implements ServiceLayer {
     @Override
     public void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback) {
-        // TODO: переписать с использованием metadataByIds
         final Consumer<Result<RefreshVideosPagedResponse>> cb =
             callback != null ? callback : result -> {
             };
@@ -252,26 +255,60 @@ public class ServiceLayerImpl implements ServiceLayer {
 
         var workerThread = Thread.ofVirtual().unstarted(() -> {
             var videos = txManager.execute(linkRepository::findAllForUpdate);
-            var hasErrors = false;
-            for (int i = 0; i < videos.size(); i++) {
-                var video = videos.get(i);
+            var videosByHosting = videos.stream()
+                .collect(Collectors.groupingBy(LinkDto::hostingName));
+
+            var hasErrors = new AtomicBoolean(false);
+            videosByHosting.forEach((hosting, vs) -> {
+                var platformName = vs.getFirst().hostingName();
                 try {
-                    final var rawLink = video.rawLink();
-                    hasErrors = hasErrors || txManager.execute(() -> addVideo(rawLink)).isFailure();
-                    if (i < videos.size() - 1) {
-                        Thread.sleep(refreshDelayMs);
+                    var platform = Platform.valueOf(platformName.toUpperCase());
+                    var hostingApiEither = hostingApiFactory.forPlatform(platform);
+                    if (hostingApiEither.isFailure()) {
+                        log.error(
+                            "ServiceLayerImpl[refreshVideos] couldn't resolve hostingApi for {}",
+                            platformName);
+                        return;
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Throwable e) {
-                    log.error(
-                        "ServiceLayerImpl[refreshVideos] unhandled exception while updating video id={}",
-                        video.rawLink(), e);
-                    hasErrors = true;
+                    var hostingApi = hostingApiEither.get();
+                    var videosByHostingIds = vs.stream().collect(Collectors.toMap(
+                        LinkDto::hostingId,
+                        k -> k
+                    ));
+                    var hostingIds = videosByHostingIds.keySet().stream().toList();
+                    switch (hostingApi.metadataByIds(hostingIds)) {
+                        case Success<List<VideoMetadataResponse>> s -> {
+                            for (var updateMetadata : s.result()) {
+                                videosByHostingIds.compute(updateMetadata.id(), (k, v) -> {
+                                    if (v == null) {
+                                        return new LinkDto(null, hostingApi.hostingName(),
+                                            "undefined",
+                                            updateMetadata.id(), updateMetadata.title(),
+                                            updateMetadata.views(), ZonedDateTime.now(
+                                            ZoneId.of("UTC")));
+                                    } else {
+                                        return new LinkDto(v.id(), v.hostingName(), v.rawLink(),
+                                            v.hostingId(), updateMetadata.title(),
+                                            updateMetadata.views(), ZonedDateTime.now(
+                                            ZoneId.of("UTC")));
+                                    }
+                                });
+                            }
+
+                            txManager.execute(() -> {
+                                videosByHostingIds.values().forEach(linkRepository::save);
+                                return null;
+                            });
+                        }
+                        default -> hasErrors.set(true);
+                    }
+                } catch (Exception e) {
+                    log.error("ServiceLayerImpl[refreshVideos] unhandled exception", e);
+                    hasErrors.set(true);
                 }
-            }
-            final var hasErrorsFinal = hasErrors;
+            });
+
+            final var hasErrorsFinal = hasErrors.get();
             var response = txManager.execute(() -> {
                 var maybePaginationState = paginationStateRepository.find(userId, messageId);
                 var firstSeenId =
