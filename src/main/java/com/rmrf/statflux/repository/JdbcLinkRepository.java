@@ -56,6 +56,15 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public List<LinkDto> findBetweenIds(long minId, long maxId) {
+        return Queries.query(
+            LinkSql.FIND_BETWEEN_IDS,
+            LINK_DTO_RESULT_SET_MAPPER,
+            minId,
+            maxId);
+    }
+
+    @Override
     public List<LinkDto> findAllForUpdate() {
         return Queries.query(
             LinkSql.FIND_ALL_FOR_UPDATE,

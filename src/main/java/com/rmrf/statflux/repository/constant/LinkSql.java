@@ -49,4 +49,7 @@ public final class LinkSql {
 
     public static final String FIND_PREVIOUS_PAGE =
         "SELECT * FROM links WHERE id < ? ORDER BY id DESC LIMIT ?";
+
+    public static final String FIND_BETWEEN_IDS =
+        "SELECT * FROM links WHERE id BETWEEN ? AND ? ORDER BY id ASC";
 }
