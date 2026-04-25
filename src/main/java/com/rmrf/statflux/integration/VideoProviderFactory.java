@@ -53,7 +53,7 @@ public class VideoProviderFactory {
         }
     }
 
-    public Result<VideoProvider> forUrl(Platform platform) {
+    public Result<VideoProvider> forPlatform(Platform platform) {
         if (platform == Platform.YOUTUBE) {
             return Success.of(youTubeVideoProvider);
         }
