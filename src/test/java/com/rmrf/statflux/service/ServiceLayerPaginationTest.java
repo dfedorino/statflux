@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.rmrf.statflux.AbstractIntegrationTest;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
@@ -18,6 +19,10 @@ import com.rmrf.statflux.repository.BaseRepositoryTest;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.TestDataFactory;
+import com.rmrf.statflux.repository.config.RepositoryConfig;
+import com.rmrf.statflux.repository.datasource.DataSource;
+import com.rmrf.statflux.repository.transaction.TransactionManager;
+import com.rmrf.statflux.repository.util.Queries;
 import com.rmrf.statflux.service.config.ServiceConfig;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -28,8 +33,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class ServiceLayerPaginationTest extends BaseRepositoryTest {
+public class ServiceLayerPaginationTest extends AbstractIntegrationTest {
 
+    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
+    private final DataSource dataSource = repositoryConfig.pooledDataSource();
+    private final TransactionManager tx = new TransactionManager(dataSource);
     private final ServiceConfig serviceConfig = new ServiceConfig();
     private final VideoProviderFactory mockHostingApiFactory = Mockito.mock(VideoProviderFactory.class);
     private LinkRepository linkRepository;
@@ -52,8 +60,9 @@ public class ServiceLayerPaginationTest extends BaseRepositoryTest {
     }
 
     @AfterEach
-    void tearDown() {
-        dataSource.close();
+    public void tearDown() {
+        tx.executeWithoutResult(
+            () -> Queries.update("TRUNCATE TABLE links, pagination_state RESTART IDENTITY CASCADE"));
     }
 
     @Test

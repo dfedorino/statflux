@@ -43,7 +43,6 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             state.firstSeenId(),
             state.lastSeenId(),
             Timestamp.from(state.updatedAt().toInstant()),
-//            state.updatedAt(),
             state.chatId(),
             state.messageId()
 
@@ -56,7 +55,6 @@ public class JdbcPaginationStateRepository implements PaginationStateRepository 
             state.firstSeenId(),
             state.lastSeenId(),
             Timestamp.from(state.updatedAt().toInstant())
-//            state.updatedAt().toInstant()
         ) > 0;
     }
 }

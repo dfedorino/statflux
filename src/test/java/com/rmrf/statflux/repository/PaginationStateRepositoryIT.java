@@ -2,15 +2,19 @@ package com.rmrf.statflux.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rmrf.statflux.AbstractIntegrationTest;
+import com.rmrf.statflux.repository.config.RepositoryConfig;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
+import com.rmrf.statflux.repository.transaction.TransactionManager;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class PaginationStateRepositoryIT extends BaseRepositoryTest {
-
+public class PaginationStateRepositoryIT extends AbstractIntegrationTest {
+    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
+    private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
     private PaginationStateRepository paginationStateRepository;
 
     @BeforeEach
