@@ -21,4 +21,4 @@ jobs:
           cache: maven
 
       - name: clean verify
-        run: mvn clean verify
+        run: mvn clean verify -B -ntp dependency:go-offline

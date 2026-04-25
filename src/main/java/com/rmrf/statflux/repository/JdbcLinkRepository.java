@@ -4,6 +4,8 @@ import com.rmrf.statflux.repository.constant.LinkSql;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import com.rmrf.statflux.repository.query.ResultSetMapper;
 import com.rmrf.statflux.repository.util.Queries;
+
+import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +33,7 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.rawLink(),
             linkDto.title(),
             linkDto.views(),
-            linkDto.updatedAt(),
+            Timestamp.from(linkDto.updatedAt().toInstant()),
             linkDto.hostingName(),
             linkDto.hostingId());
 
@@ -42,7 +44,7 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.hostingId(),
             linkDto.title(),
             linkDto.views(),
-            linkDto.updatedAt()
+            Timestamp.from(linkDto.updatedAt().toInstant())
         ) > 0;
     }
 

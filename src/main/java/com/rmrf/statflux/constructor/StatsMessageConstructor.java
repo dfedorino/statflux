@@ -1,6 +1,7 @@
 package com.rmrf.statflux.constructor;
 
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.bot.infra.util.TelegramBotFormatter;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class StatsMessageConstructor {
                 .append('\n')
                 .append('\n')
                 .append(videosStatsInfo)
-                .append("\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-")
+                .append("------------------")
                 .append('\n')
                 .append(l10n.totalViews)
                 .append(' ')
@@ -46,11 +47,9 @@ public class StatsMessageConstructor {
                 .append(l10n.totalLinkCount)
                 .append(' ')
                 .append(statsResponse.getTotalVideos())
-                .toString()
-                // Экранирование символов для тг
-                .replace(".", "\\.");
+                .toString();
 
-        return text;
+        return TelegramBotFormatter.escapeSpecial(text);
     }
 
     public InlineKeyboardMarkup getMarkup() {

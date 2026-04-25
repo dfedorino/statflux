@@ -38,7 +38,7 @@ public class YouTubeVideoProviderImpl implements YouTubeVideoProvider {
 
     @Override
     public Result<VideoMetadataResponse> metadataByLink(String rawLink) {
-        return metadataById(rawLink);
+        return metadataById(YouTubeUrlParser.extractVideoId(rawLink));
     }
 
     /**

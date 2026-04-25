@@ -73,7 +73,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 return hostingApiEither.asFailure().swap();
             }
             var hostingApi = hostingApiEither.get();
-            return switch (hostingApi.metadataById(rawUrl)) {
+            return switch (hostingApi.metadataByLink(rawUrl)) {
                 case Success<VideoMetadataResponse> s -> {
                     var dbItem = new LinkDto(
                         null,
@@ -115,23 +115,25 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            var items = linkRepository.findFirstPage(videosPerPage);
-            var totalLinks = linkRepository.getTotalLinkCount();
-            var totalViews = linkRepository.getTotalViewSum();
+            return updateOrInitSession(userId, messageId, paginationStateDto -> {
+                var items = linkRepository.findFirstPage(videosPerPage);
+                var totalLinks = linkRepository.getTotalLinkCount();
+                var totalViews = linkRepository.getTotalViewSum();
 
-            var firstSeenId = items.isEmpty() ? 0 : items.getFirst().id();
-            var lastSeenId = items.isEmpty() ? videosPerPage : items.getLast().id();
-            var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
-                ZonedDateTime.now(ZoneOffset.UTC));
-            paginationStateRepository.save(state);
+                var firstSeenId = items.isEmpty() ? null : items.getFirst().id();
+                var lastSeenId = items.isEmpty() ? null : items.getLast().id();
+                var state = new PaginationStateDto(userId, messageId, firstSeenId, lastSeenId,
+                    ZonedDateTime.now(ZoneOffset.UTC));
+                paginationStateRepository.save(state);
 
-            var responseItems = items.stream()
-                .map(LinkDto::toVideoStatsItem)
-                .toList();
-            var hasMore = totalLinks > items.size();
-            var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
-                totalViews);
-            return Success.of(resp);
+                var responseItems = items.stream()
+                    .map(LinkDto::toVideoStatsItem)
+                    .toList();
+                var hasMore = totalLinks > items.size();
+                var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, false,
+                    totalViews);
+                return Success.of(resp);
+            });
         } catch (Throwable e) {
             log.error(
                 "UserSessionServiceImpl[getVideos] userId={} messageId={} unhandled exception",
@@ -231,13 +233,10 @@ public class ServiceLayerImpl implements ServiceLayer {
     private @NonNull Result<VideoStatsResponse> updateOrInitSession(Long userId, Long messageId,
         Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
         var maybePaginationState = paginationStateRepository.find(userId, messageId);
-        if (maybePaginationState.isEmpty()) {
-            log.info(
-                "UserSessionServiceImpl[updateOrInitSession] userId={} messageId={} session not found",
-                userId, messageId);
-            return getVideos(userId, messageId);
-        }
-        var paginationState = maybePaginationState.get();
+        var paginationState = maybePaginationState.orElseGet(
+            () -> new PaginationStateDto(userId, messageId, 0L, (long) videosPerPage,
+                ZonedDateTime.now(
+                    ZoneId.of("UTC"))));
         return f.apply(paginationState);
     }
 
