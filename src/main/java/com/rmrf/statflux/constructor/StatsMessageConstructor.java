@@ -32,7 +32,7 @@ public class StatsMessageConstructor {
                     .append('_')
                     .append(l10n.views)
                     .append(": ")
-                    .append(video.views())
+                    .append(TelegramBotFormatter.groupThousands(video.views()))
                     .append('_')
                     .append('\n')
                     .append('_')
@@ -49,15 +49,15 @@ public class StatsMessageConstructor {
                 .append('\n')
                 .append('\n')
                 .append(videosStatsInfo)
-                .append("───────────────────────")
+                .append("──────────")
                 .append('\n')
                 .append(l10n.totalViews)
                 .append(' ')
-                .append(statsResponse.getTotalViews())
+                .append(TelegramBotFormatter.groupThousands(statsResponse.getTotalViews()))
                 .append('\n')
                 .append(l10n.totalLinkCount)
                 .append(' ')
-                .append(statsResponse.getTotalVideos())
+                .append(TelegramBotFormatter.groupThousands(statsResponse.getTotalVideos()))
                 .toString();
 
         return text;
