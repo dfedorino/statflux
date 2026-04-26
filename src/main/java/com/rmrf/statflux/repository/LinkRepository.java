@@ -10,6 +10,8 @@ public interface LinkRepository {
 
     List<LinkDto> findAll();
 
+    List<LinkDto> findBetweenIds(long minId, long maxId);
+
     List<LinkDto> findAllForUpdate();
 
     int getTotalLinkCount();
