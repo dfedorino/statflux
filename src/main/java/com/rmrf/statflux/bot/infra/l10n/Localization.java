@@ -8,6 +8,7 @@ public class Localization {
     public Link link;
     public Common common;
     public CallbackQueries callbackQueries;
+    public TimeFormat timeFormat;
 
     public static class Start {
         public String greeting;
@@ -19,8 +20,10 @@ public class Localization {
         public String updatedAt;
         public String totalViews;
         public String totalLinkCount;
-        public String refresh;
         public String noVideos;
+        public String refresh;
+        public String prev;
+        public String next;
     }
 
     public static class Link {
@@ -39,5 +42,11 @@ public class Localization {
         public String nextError;
         public String prevError;
         public String refreshError;
+    }
+
+    public static class TimeFormat {
+        public String today;
+        public String yesterday;
+        public String at;
     }
 }
