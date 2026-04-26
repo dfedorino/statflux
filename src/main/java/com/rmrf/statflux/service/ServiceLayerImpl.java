@@ -117,7 +117,7 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationStateDto -> {
+            return initSession(userId, messageId, paginationStateDto -> {
                 var items = linkRepository.findFirstPage(userId, videosPerPage);
                 var totalLinks = linkRepository.getTotalLinkCount(userId);
                 var totalViews = linkRepository.getTotalViewSum(userId);
@@ -149,10 +149,10 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getNextVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationState -> {
-                var totalLinks = linkRepository.getTotalLinkCount();
+            return updateCurrentOrPrevSession(userId, messageId, paginationState -> {
+                var maxId = linkRepository.findMaxId(userId);
 
-                if (paginationState.lastSeenId() >= totalLinks) {
+                if (maxId.isPresent() && paginationState.lastSeenId() >= maxId.get()) {
                     log.error(
                         "UserSessionServiceImpl[getNextVideos] userId={} messageId={} lastSeenId=${} pagination overflow",
                         userId, messageId, paginationState.lastSeenId());
@@ -174,9 +174,10 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var responseItems = items.stream()
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
-                var hasMore = lastSeenId < totalLinks;
+                var hasMore = maxId.isPresent() && lastSeenId < maxId.get();
                 var minId = linkRepository.findMinId(userId);
                 var hasPrev = minId.isPresent() && firstSeenId > minId.get();
+                var totalLinks = linkRepository.getTotalLinkCount(userId);
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
@@ -195,8 +196,9 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationState -> {
-                if (paginationState.firstSeenId() <= 1) {
+            return updateCurrentOrPrevSession(userId, messageId, paginationState -> {
+                var minId = linkRepository.findMinId(userId);
+                if (minId.isPresent() && paginationState.firstSeenId() <= minId.get()) {
                     log.error(
                         "UserSessionServiceImpl[getPreviousVideos] userId={} messageId={} lastSeenId=${} pagination underflow",
                         userId, messageId, paginationState.lastSeenId());
@@ -219,8 +221,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var responseItems = items.stream()
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
-                var hasMore = lastSeenId < totalLinks;
-                var minId = linkRepository.findMinId(userId);
+                var maxId = linkRepository.findMaxId(userId);
+                var hasMore = maxId.isPresent() && lastSeenId < maxId.get();
                 var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
@@ -234,14 +236,21 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
     }
 
-    private @NonNull Result<VideoStatsResponse> updateOrInitSession(Long userId, Long messageId,
+    private @NonNull Result<VideoStatsResponse> initSession(Long userId, Long messageId,
         Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
-        var maybePaginationState = paginationStateRepository.find(userId, messageId);
-        var paginationState = maybePaginationState.orElseGet(
-            () -> new PaginationStateDto(userId, messageId, 0L, (long) videosPerPage,
-                ZonedDateTime.now(
-                    ZoneId.of("UTC"))));
+        var paginationState = new PaginationStateDto(userId, messageId, 0L, (long) videosPerPage,
+                ZonedDateTime.now(ZoneId.of("UTC")));
         return f.apply(paginationState);
+    }
+
+    private @NonNull Result<VideoStatsResponse> updateCurrentOrPrevSession(Long userId, Long messageId,
+        Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
+        return f.apply(paginationStateRepository.find(userId, messageId)
+            .or(() -> paginationStateRepository.find(userId, messageId - 1))
+            // should never end up here...
+            .orElseGet(() -> new PaginationStateDto(userId, messageId, 0L,
+                (long) videosPerPage,
+                ZonedDateTime.now(ZoneId.of("UTC")))));
     }
 
     @Override

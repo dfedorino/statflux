@@ -73,4 +73,7 @@ public final class LinkSql {
 
     public static final String FIND_MIN_ID =
         "SELECT MIN(id) FROM links WHERE chat_id = ?";
+
+    public static final String FIND_MAX_ID =
+        "SELECT MAX(id) FROM links WHERE chat_id = ?";
 }
