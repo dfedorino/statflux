@@ -35,4 +35,6 @@ public interface LinkRepository {
 
     Optional<Long> findMinId(long chatId);
 
+    Optional<Long> findMaxId(long chatId);
+
 }

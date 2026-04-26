@@ -176,4 +176,16 @@ public class JdbcLinkRepository implements LinkRepository {
             chatId
         ).stream().filter(Objects::nonNull).findAny();
     }
+
+    @Override
+    public Optional<Long> findMaxId(long chatId) {
+        return Queries.query(
+            LinkSql.FIND_MAX_ID,
+            rs -> {
+                long val = rs.getLong(1);
+                return rs.wasNull() ? null : val;
+            },
+            chatId
+        ).stream().filter(Objects::nonNull).findAny();
+    }
 }
