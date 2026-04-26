@@ -47,7 +47,8 @@ public class CommandStatsHandler implements Chain.Node<TelegramBotContext> {
     private void handleSuccess(TelegramBotContext ctx, VideoStatsResponse videoStatsResponse) {
         Message message = ctx.update().getMessage();
 
-        StatsMessageConstructor messageConstructor = new StatsMessageConstructor(videoStatsResponse, l10n.stats);
+        StatsMessageConstructor messageConstructor =
+                new StatsMessageConstructor(videoStatsResponse, l10n.stats, l10n.timeFormat);
         SendMessage responseMessage = SendMessage.builder()
                 .chatId(message.getChatId())
                 .replyToMessageId(message.getMessageId())

@@ -55,10 +55,12 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
                 .append('(')
                 .append(response.rawUrl())
                 .append(')')
-                .append(Localization.DOUBLE_CARRY)
+                .append('\n')
+                .append('_')
                 .append(localization.views)
                 .append(' ')
                 .append(response.views())
+                .append('_')
                 .append(Localization.DOUBLE_CARRY)
                 .append(localization.statsMotivationText)
                 .toString();

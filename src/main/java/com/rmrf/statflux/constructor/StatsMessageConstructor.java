@@ -1,6 +1,7 @@
 package com.rmrf.statflux.constructor;
 
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.bot.infra.util.HumanReadableTime;
 import com.rmrf.statflux.bot.infra.util.TelegramBotFormatter;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
@@ -16,6 +17,7 @@ import java.util.List;
 public class StatsMessageConstructor {
     private final VideoStatsResponse statsResponse;
     private final Localization.Stats l10n;
+    private final Localization.TimeFormat timeFormatL10n;
 
     public String getText() {
         StringBuilder videosStatsInfo = new StringBuilder();
@@ -33,6 +35,12 @@ public class StatsMessageConstructor {
                     .append(video.views())
                     .append('_')
                     .append('\n')
+                    .append('_')
+                    .append(l10n.updatedAt)
+                    .append(": ")
+                    .append(HumanReadableTime.format(video.updatedAt(), timeFormatL10n))
+                    .append('_')
+                    .append('\n')
                     .append('\n');
         }
 
@@ -41,7 +49,7 @@ public class StatsMessageConstructor {
                 .append('\n')
                 .append('\n')
                 .append(videosStatsInfo)
-                .append(TelegramBotFormatter.escapeSpecial("------------------"))
+                .append("───────────────────────")
                 .append('\n')
                 .append(l10n.totalViews)
                 .append(' ')
@@ -56,34 +64,36 @@ public class StatsMessageConstructor {
     }
 
     public InlineKeyboardMarkup getMarkup() {
-        List<InlineKeyboardButton> buttons = new ArrayList<>();
+        List<InlineKeyboardButton> paginationButtons = new ArrayList<>();
         if (statsResponse.hasPrev()) {
-            buttons.add(
+            paginationButtons.add(
                     InlineKeyboardButton.builder()
-                            .text("<")
+                            .text(l10n.prev)
                             .callbackData("prev")
                             .build()
             );
         }
-        buttons.add(
-                InlineKeyboardButton.builder()
-                        .text(l10n.refresh)
-                        .callbackData("refresh")
-                        .build()
-        );
         if (statsResponse.hasNext()) {
-            buttons.add(
+            paginationButtons.add(
                     InlineKeyboardButton.builder()
-                            .text(">")
+                            .text(l10n.next)
                             .callbackData("next")
                             .build()
             );
         }
 
         return InlineKeyboardMarkup.builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                buttons
+                .keyboard(
+                        List.of(
+                            new InlineKeyboardRow(
+                                InlineKeyboardButton.builder()
+                                        .text(l10n.refresh)
+                                        .callbackData("refresh")
+                                        .build()
+                            ),
+                            new InlineKeyboardRow(
+                                paginationButtons
+                            )
                         )
                 )
                 .build();

@@ -11,16 +11,21 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 public abstract class AbstractStatsCallbackHandler extends AbstractCallbackHandler {
     private final Localization.Stats l10n;
+    private final Localization.TimeFormat timeFormatL10n;
 
-    protected AbstractStatsCallbackHandler(Localization.Stats l10n, Logger log) {
+    protected AbstractStatsCallbackHandler(Localization.Stats l10n,
+                                           Localization.TimeFormat timeFormatL10n,
+                                           Logger log) {
         super(log);
         this.l10n = l10n;
+        this.timeFormatL10n = timeFormatL10n;
     }
 
     protected void editMessageWith(TelegramBotContext ctx, VideoStatsResponse videoStatsResponse) {
         MaybeInaccessibleMessage message = ctx.update().getCallbackQuery().getMessage();
 
-        StatsMessageConstructor statsMessageConstructor = new StatsMessageConstructor(videoStatsResponse, l10n);
+        StatsMessageConstructor statsMessageConstructor =
+                new StatsMessageConstructor(videoStatsResponse, l10n, timeFormatL10n);
         try {
             ctx.client().execute(
                     EditMessageText.builder()

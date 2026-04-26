@@ -29,7 +29,8 @@ public class CommandStartHandler implements Chain.Node<TelegramBotContext> {
 
         log.debug("/start handling");
         SendMessage responseMessage = SendMessage.builder()
-                .chatId(ctx.update().getMessage().getChatId())
+                .chatId(message.getChatId())
+                .replyToMessageId(message.getMessageId())
                 .text(localization.greeting)
                 .build();
         try {

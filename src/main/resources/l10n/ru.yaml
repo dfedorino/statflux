@@ -7,7 +7,9 @@ stats:
   introduction: 'Добрый день! Вот просмотры на сегодня:'
   totalViews: 'Общее количество просмотров:'
   totalLinkCount: 'Общее количество ссылок:'
-  refresh: 'Обновить'
+  refresh: '🔄 Обновить'
+  prev: '⬅️ Назад'
+  next: '➡️ Далее'
 link:
   videoAddedSuccessfully: 'Видео добавлено успешно\!'
   views: 'Просмотры:'
@@ -20,3 +22,7 @@ callbackQueries:
 common:
   useKnownCommands: 'Я могу добавить ссылку на YouTube/Rutube или выполнить одну из доступных команд'
   uncaughtError: 'Во время обработки запроса произошла непредвиденная ошибка. Попробуй повторить свой запрос чуть позже'
+timeFormat:
+  today: 'сегодня'
+  yesterday: 'вчера'
+  at: 'в'
