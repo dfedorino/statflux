@@ -2,6 +2,7 @@ package com.rmrf.statflux.repository;
 
 import com.rmrf.statflux.repository.dto.LinkDto;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 
 public interface LinkRepository {
@@ -31,5 +32,7 @@ public interface LinkRepository {
     List<LinkDto> findPreviousPage(long firstSeenId, int limit);
 
     boolean delete(long chatId, long linkId);
+
+    Optional<Long> findMinId(long chatId);
 
 }
