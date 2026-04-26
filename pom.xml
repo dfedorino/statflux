@@ -178,19 +178,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.5</version>
-                <configuration>
-                    <environmentVariables>
-                        <DB_URL>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL</DB_URL>
-                        <DB_USER>sa</DB_USER>
-                        <DB_PASSWORD>sa</DB_PASSWORD>
-                        <REFRESH_DELAY_MS>50</REFRESH_DELAY_MS>
-                        <PAGE_SIZE>5</PAGE_SIZE>
-                        <POOL_SIZE>5</POOL_SIZE>
-                        <VK_API_URL>https://api.vk.com</VK_API_URL>
-                        <VK_API_TOKEN>your_vk_api_token</VK_API_TOKEN>
-                        <VK_API_VERSION>5.199</VK_API_VERSION>
-                    </environmentVariables>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

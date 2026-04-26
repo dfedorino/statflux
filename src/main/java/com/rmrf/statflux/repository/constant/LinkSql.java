@@ -40,11 +40,20 @@ public final class LinkSql {
     public static final String GET_TOTAL_VIEW_SUM =
         "SELECT sum(views) FROM links";
 
+    public static final String GET_TOTAL_VIEW_SUM_BY_CHAT_ID =
+        "SELECT sum(views) FROM links WHERE chat_id = ?";
+
     public static final String GET_TOTAL_LINK_COUNT =
         "SELECT count(id) FROM links";
 
+    public static final String GET_TOTAL_LINK_COUNT_BY_CHAT_ID =
+        "SELECT count(id) FROM links WHERE chat_id = ?";
+
     public static final String FIND_FIRST_PAGE =
         "SELECT * FROM links ORDER BY id ASC LIMIT ?";
+
+    public static final String FIND_FIRST_PAGE_BY_CHAT_ID =
+        "SELECT * FROM links WHERE chat_id = ? ORDER BY id ASC LIMIT ?";
 
     public static final String FIND_NEXT_PAGE =
         "SELECT * FROM links WHERE id > ? ORDER BY id ASC LIMIT ?";
