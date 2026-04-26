@@ -17,6 +17,7 @@ public class TestDataFactory {
         for (int i = 1; i <= amount; i++) {
             assertThat(linkRepository.save(new LinkDto(
                 null,
+                1L,
                 "YouTube",
                 "https://youtube.com/v/" + i,
                 "" + i,

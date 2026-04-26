@@ -34,7 +34,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
         }
 
         String link = ctx.update().getMessage().getText();
-        var responseResult = serviceLayer.addVideo(link);
+        var responseResult = serviceLayer.addVideo(ctx.update().getMessage().getChatId(), link);
         if (responseResult.isFailure()) {
             handleIncorrect(ctx);
             return;
