@@ -54,6 +54,22 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public Optional<LinkDto> saveAndGet(@NonNull LinkDto linkDto) {
+        // TODO: improvement - upsert
+        return Queries.query(
+            LinkSql.UPSERT,
+            LINK_DTO_RESULT_SET_MAPPER,
+            linkDto.chatId(),
+            linkDto.hostingName(),
+            linkDto.rawLink(),
+            linkDto.hostingId(),
+            linkDto.title(),
+            linkDto.views(),
+            Timestamp.from(linkDto.updatedAt().toInstant())
+        ).stream().findFirst();
+    }
+
+    @Override
     public List<LinkDto> findAll() {
         return Queries.query(
             LinkSql.FIND_ALL,

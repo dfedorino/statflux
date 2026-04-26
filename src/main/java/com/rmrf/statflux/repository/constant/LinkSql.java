@@ -31,6 +31,27 @@ public final class LinkSql {
               AND hosting_id = ?
             """;
 
+    public static final String UPSERT =
+        """
+            INSERT INTO links (
+                chat_id,
+                hosting_name,
+                raw_link,
+                hosting_id,
+                title,
+                views,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (chat_id, hosting_name, hosting_id)
+            DO UPDATE SET
+                raw_link = EXCLUDED.raw_link,
+                title = EXCLUDED.title,
+                views = EXCLUDED.views,
+                updated_at = EXCLUDED.updated_at
+            RETURNING *
+            """;
+
     public static final String FIND_ALL =
         "SELECT * FROM links";
 

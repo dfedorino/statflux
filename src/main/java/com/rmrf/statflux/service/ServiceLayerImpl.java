@@ -86,14 +86,15 @@ public class ServiceLayerImpl implements ServiceLayer {
                         s.result().views(),
                         ZonedDateTime.now(ZoneOffset.UTC)
                     );
-                    var success = linkRepository.save(dbItem);
-                    if (!success) {
+                    var saved = linkRepository.saveAndGet(dbItem);
+                    if (saved.isEmpty()) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
                         yield Failure.of(
                             new InternalTechErrorException("failed to save metadata to repo"));
                     }
                     yield Success.of(
                         new AddVideoResponse(
+                            String.valueOf(saved.get().id()),
                             hostingApi.hostingName(),
                             s.result().title(),
                             rawUrl,
