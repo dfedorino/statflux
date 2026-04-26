@@ -9,6 +9,7 @@ public class Localization {
     public Common common;
     public CallbackQueries callbackQueries;
     public TimeFormat timeFormat;
+    public Delete delete;
 
     public static class Start {
         public String greeting;
@@ -48,5 +49,11 @@ public class Localization {
         public String today;
         public String yesterday;
         public String at;
+    }
+
+    public static class Delete {
+        public String success;
+        public String error;
+        public String usage;
     }
 }

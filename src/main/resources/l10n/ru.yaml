@@ -26,3 +26,7 @@ timeFormat:
   today: 'сегодня'
   yesterday: 'вчера'
   at: 'в'
+delete:
+  success: 'Видео удалено успешно!'
+  error: 'Не удалось удалить видео'
+  usage: 'Чтобы удалить ссылку, введите её ID: /delete <id>'
