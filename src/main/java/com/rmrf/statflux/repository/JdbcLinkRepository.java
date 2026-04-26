@@ -123,4 +123,13 @@ public class JdbcLinkRepository implements LinkRepository {
         Collections.reverse(result);
         return result;
     }
+
+    @Override
+    public boolean delete(long chatId, long linkId) {
+        return Queries.update(
+            LinkSql.DELETE,
+            linkId,
+            chatId
+        ) > 0;
+    }
 }
