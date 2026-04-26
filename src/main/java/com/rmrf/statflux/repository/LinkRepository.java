@@ -7,7 +7,10 @@ import lombok.NonNull;
 
 public interface LinkRepository {
 
+    @Deprecated
     boolean save(@NonNull LinkDto linkDto);
+
+    Optional<LinkDto> saveAndGet(@NonNull LinkDto linkDto);
 
     List<LinkDto> findAll();
 
