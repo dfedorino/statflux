@@ -11,7 +11,6 @@ import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.integration.VideoProvider;
 import com.rmrf.statflux.integration.VideoProviderFactory;
 import com.rmrf.statflux.service.config.ServiceConfig;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -43,7 +42,7 @@ public class ServiceLayerIT extends AbstractIntegrationTest {
         given(mockHostingApi.hostingName())
             .willReturn(hostingName);
 
-        var addedLink = serviceLayer.addVideo(rawUrl);
+        var addedLink = serviceLayer.addVideo(1L, rawUrl);
 
         assertThat(addedLink).isEqualTo(Success.of(
             new AddVideoResponse(

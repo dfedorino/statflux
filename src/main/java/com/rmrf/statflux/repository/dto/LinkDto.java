@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import lombok.NonNull;
 
 /**
+ * @param chatId      идентификатор чата пользователя
  * @param hostingName идентификатор хостинга
  * @param rawLink     необработанный url видео
  * @param hostingId   идентификатор видео по данным хостинга
@@ -14,6 +15,7 @@ import lombok.NonNull;
  */
 public record LinkDto(
     Long id,
+    Long chatId,
     String hostingName,
     String rawLink,
     String hostingId,
