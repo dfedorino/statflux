@@ -6,6 +6,7 @@ import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
+import com.rmrf.statflux.domain.exceptions.LinkIdNotFoundException;
 import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.integration.VideoProviderFactory;
@@ -117,9 +118,9 @@ public class ServiceLayerImpl implements ServiceLayer {
         @NonNull Long messageId) {
         try {
             return updateOrInitSession(userId, messageId, paginationStateDto -> {
-                var items = linkRepository.findFirstPage(videosPerPage);
-                var totalLinks = linkRepository.getTotalLinkCount();
-                var totalViews = linkRepository.getTotalViewSum();
+                var items = linkRepository.findFirstPage(userId, videosPerPage);
+                var totalLinks = linkRepository.getTotalLinkCount(userId);
+                var totalViews = linkRepository.getTotalViewSum(userId);
 
                 var firstSeenId = items.isEmpty() ? null : items.getFirst().id();
                 var lastSeenId = items.isEmpty() ? null : items.getLast().id();
@@ -347,5 +348,21 @@ public class ServiceLayerImpl implements ServiceLayer {
             refreshSemaphore.release();
         });
         workerThread.start();
+    }
+
+    @Override
+    @Transactional
+    public @NonNull Result<Boolean> deleteVideo(@NonNull Long userId, long linkId) {
+        try {
+            var deleted = linkRepository.delete(userId, linkId);
+            if (!deleted) {
+                log.error("ServiceLayerImpl[deleteVideo] no link found for userId={} linkId={}", userId, linkId);
+                return Failure.of(new LinkIdNotFoundException("no link found for id=" + linkId));
+            }
+            return Success.of(true);
+        } catch (Exception e) {
+            log.error("ServiceLayerImpl[deleteVideo] unhandled exception", e);
+            return Failure.of(e);
+        }
     }
 }

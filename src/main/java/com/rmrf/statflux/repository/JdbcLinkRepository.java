@@ -84,6 +84,16 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public int getTotalLinkCount(long chatId) {
+        return Queries.query(
+                LinkSql.GET_TOTAL_LINK_COUNT_BY_CHAT_ID,
+                rs -> rs.getInt(1),
+                chatId
+            )
+            .getFirst();
+    }
+
+    @Override
     public long getTotalViewSum() {
         return Queries.query(
                 LinkSql.GET_TOTAL_VIEW_SUM,
@@ -93,10 +103,30 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public long getTotalViewSum(long chatId) {
+        return Queries.query(
+                LinkSql.GET_TOTAL_VIEW_SUM_BY_CHAT_ID,
+                rs -> rs.getLong(1),
+                chatId
+            )
+            .getFirst();
+    }
+
+    @Override
     public List<LinkDto> findFirstPage(int limit) {
         return Queries.query(
             LinkSql.FIND_FIRST_PAGE,
             LINK_DTO_RESULT_SET_MAPPER,
+            limit
+        );
+    }
+
+    @Override
+    public List<LinkDto> findFirstPage(long chatId, int limit) {
+        return Queries.query(
+            LinkSql.FIND_FIRST_PAGE_BY_CHAT_ID,
+            LINK_DTO_RESULT_SET_MAPPER,
+            chatId,
             limit
         );
     }

@@ -16,9 +16,15 @@ public interface LinkRepository {
 
     int getTotalLinkCount();
 
+    int getTotalLinkCount(long chatId);
+
     long getTotalViewSum();
 
+    long getTotalViewSum(long chatId);
+
     List<LinkDto> findFirstPage(int limit);
+
+    List<LinkDto> findFirstPage(long chatId, int limit);
 
     List<LinkDto> findNextPage(long lastSeenId, int limit);
 
