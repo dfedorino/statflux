@@ -65,7 +65,7 @@ public class ServiceLayerImpl implements ServiceLayer {
 
     @Override
     @Transactional
-    public @NonNull Result<AddVideoResponse> addVideo(@NonNull String rawUrl) {
+    public @NonNull Result<AddVideoResponse> addVideo(@NonNull Long userId, @NonNull String rawUrl) {
         try {
             var hostingApiEither = hostingApiFactory.forUrl(rawUrl);
             if (hostingApiEither.isFailure()) {
@@ -77,6 +77,7 @@ public class ServiceLayerImpl implements ServiceLayer {
                 case Success<VideoMetadataResponse> s -> {
                     var dbItem = new LinkDto(
                         null,
+                        userId,
                         hostingApi.hostingName(),
                         rawUrl,
                         s.result().id(),
@@ -281,13 +282,13 @@ public class ServiceLayerImpl implements ServiceLayer {
                             for (var updateMetadata : s.result()) {
                                 videosByHostingIds.compute(updateMetadata.id(), (k, v) -> {
                                     if (v == null) {
-                                        return new LinkDto(null, hostingApi.hostingName(),
+                                        return new LinkDto(null, userId, hostingApi.hostingName(),
                                             "undefined",
                                             updateMetadata.id(), updateMetadata.title(),
                                             updateMetadata.views(), ZonedDateTime.now(
                                             ZoneId.of("UTC")));
                                     } else {
-                                        return new LinkDto(v.id(), v.hostingName(), v.rawLink(),
+                                        return new LinkDto(v.id(), userId, v.hostingName(), v.rawLink(),
                                             v.hostingId(), updateMetadata.title(),
                                             updateMetadata.views(), ZonedDateTime.now(
                                             ZoneId.of("UTC")));
