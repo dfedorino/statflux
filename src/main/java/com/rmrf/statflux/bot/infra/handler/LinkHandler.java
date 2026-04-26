@@ -59,7 +59,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
                 .append('_')
                 .append(localization.views)
                 .append(' ')
-                .append(response.views())
+                .append(TelegramBotFormatter.groupThousands(response.views()))
                 .append('_')
                 .append(Localization.DOUBLE_CARRY)
                 .append(localization.statsMotivationText)
