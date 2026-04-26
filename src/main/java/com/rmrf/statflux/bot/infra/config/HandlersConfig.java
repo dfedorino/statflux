@@ -1,5 +1,6 @@
 package com.rmrf.statflux.bot.infra.config;
 
+import com.rmrf.statflux.bot.infra.handler.CommandDeleteHandler;
 import com.rmrf.statflux.bot.infra.handler.CommandStartHandler;
 import com.rmrf.statflux.bot.infra.handler.CommandStatsHandler;
 import com.rmrf.statflux.bot.infra.handler.DefaultHandler;
@@ -60,5 +61,9 @@ public class HandlersConfig {
 
     public UncaughtErrorMiddleware uncaughtErrorMiddleware() {
         return new UncaughtErrorMiddleware(localization.common);
+    }
+
+    public CommandDeleteHandler commandDeleteHandler() {
+        return new CommandDeleteHandler(serviceLayer, localization);
     }
 }
