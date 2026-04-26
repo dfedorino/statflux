@@ -9,6 +9,8 @@ import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.NonNull;
 
 public class JdbcLinkRepository implements LinkRepository {
@@ -161,5 +163,17 @@ public class JdbcLinkRepository implements LinkRepository {
             linkId,
             chatId
         ) > 0;
+    }
+
+    @Override
+    public Optional<Long> findMinId(long chatId) {
+        return Queries.query(
+            LinkSql.FIND_MIN_ID,
+            rs -> {
+                long val = rs.getLong(1);
+                return rs.wasNull() ? null : val;
+            },
+            chatId
+        ).stream().filter(Objects::nonNull).findAny();
     }
 }

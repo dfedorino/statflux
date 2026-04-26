@@ -301,6 +301,24 @@ public class ServiceLayerPaginationIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void deleteVideo_firstLinkFromPage1_nextCursorStillWorks() {
+        var page1 = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
+
+        long linkId = Long.parseLong(page1.getItems().getFirst().id());
+        serviceLayer.deleteVideo(USER_ID, linkId);
+
+        var page2 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(page2.hasPrev());
+
+
+        page1 = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
+        assertFalse(page1.hasPrev());
+        assertThat(page1.getItems())
+            .extracting(VideoStatsItem::id)
+            .doesNotContain(String.valueOf(linkId));
+    }
+
+    @Test
     public void deleteVideo_middleLinkFromPage2_nextCursorStillWorks() {
         // navigate to page 2
         serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();

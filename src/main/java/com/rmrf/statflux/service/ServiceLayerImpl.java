@@ -175,7 +175,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasMore = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var minId = linkRepository.findMinId(userId);
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
@@ -219,7 +220,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasMore = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var minId = linkRepository.findMinId(userId);
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
@@ -333,7 +335,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasNext = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var minId = linkRepository.findMinId(userId);
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 return new RefreshVideosPagedResponse(responseItems, totalLinks,
                     hasNext, hasPrev, totalViews, hasErrorsFinal);
             });

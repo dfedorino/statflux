@@ -70,4 +70,7 @@ public final class LinkSql {
             WHERE id = ?
               AND chat_id = ?
             """;
+
+    public static final String FIND_MIN_ID =
+        "SELECT MIN(id) FROM links WHERE chat_id = ?";
 }

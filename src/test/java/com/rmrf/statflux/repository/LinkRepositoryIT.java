@@ -502,4 +502,47 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(links).isEmpty();
     }
+
+    @Test
+    void should_return_min_id() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), 3));
+
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isPresent();
+        assertThat(minId.get()).isEqualTo(1L);
+    }
+
+    @Test
+    void should_return_min_id_after_deletion_of_first() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), 3));
+
+        long firstId = tx.execute(() -> linkRepository.findFirstPage(1).getFirst().id());
+        tx.executeWithoutResult(() -> linkRepository.delete(1L, firstId));
+
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isPresent();
+        assertThat(minId.get()).isGreaterThan(firstId);
+    }
+
+    @Test
+    void should_return_empty_when_no_links() {
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isEmpty();
+    }
+
+    @Test
+    void should_return_min_id_only_for_given_chat() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, 1L, ZonedDateTime.now(), 3));
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, 2L, ZonedDateTime.now(), 3));
+
+        var minIdChat1 = tx.execute(() -> linkRepository.findMinId(1L));
+        var minIdChat2 = tx.execute(() -> linkRepository.findMinId(2L));
+
+        assertThat(minIdChat1).isPresent();
+        assertThat(minIdChat2).isPresent();
+        assertThat(minIdChat1.get()).isNotEqualTo(minIdChat2.get());
+    }
 }
