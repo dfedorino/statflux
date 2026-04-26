@@ -54,4 +54,11 @@ public final class LinkSql {
 
     public static final String FIND_BETWEEN_IDS =
         "SELECT * FROM links WHERE id BETWEEN ? AND ? ORDER BY id ASC";
+
+    public static final String DELETE =
+        """
+            DELETE FROM links
+            WHERE id = ?
+              AND chat_id = ?
+            """;
 }

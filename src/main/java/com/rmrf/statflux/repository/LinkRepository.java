@@ -24,4 +24,6 @@ public interface LinkRepository {
 
     List<LinkDto> findPreviousPage(long firstSeenId, int limit);
 
+    boolean delete(long chatId, long linkId);
+
 }

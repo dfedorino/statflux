@@ -476,4 +476,30 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 )
             );
     }
+
+    @Test
+    void should_delete_video() {
+
+        ZonedDateTime now = ZonedDateTime
+            .now(ZoneOffset.UTC)
+            .truncatedTo(ChronoUnit.MICROS);
+
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
+            null,
+            1L,
+            "YouTube",
+            "https://youtube.com/v/123",
+            "123",
+            "My video",
+            1000L,
+            now
+        )))).isTrue();
+
+        assertThat(tx.execute(() -> linkRepository.delete(1L, 1L)))
+            .isTrue();
+
+        var links = tx.execute(() -> linkRepository.findAll());
+
+        assertThat(links).isEmpty();
+    }
 }
