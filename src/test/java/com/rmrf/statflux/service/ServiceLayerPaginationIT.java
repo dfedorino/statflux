@@ -3,19 +3,20 @@ package com.rmrf.statflux.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.rmrf.statflux.AbstractIntegrationTest;
 import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsItem;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
+import com.rmrf.statflux.domain.exceptions.LinkIdNotFoundException;
 import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
 import com.rmrf.statflux.integration.VideoProviderFactory;
-import com.rmrf.statflux.repository.BaseRepositoryTest;
 import com.rmrf.statflux.repository.LinkRepository;
 import com.rmrf.statflux.repository.PaginationStateRepository;
 import com.rmrf.statflux.repository.TestDataFactory;
@@ -33,11 +34,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class ServiceLayerPaginationTest extends AbstractIntegrationTest {
+public class ServiceLayerPaginationIT extends AbstractIntegrationTest {
 
     private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private final DataSource dataSource = repositoryConfig.pooledDataSource();
-    private final TransactionManager tx = new TransactionManager(dataSource);
+    private DataSource dataSource;
+    private TransactionManager tx;
     private final ServiceConfig serviceConfig = new ServiceConfig();
     private final VideoProviderFactory mockHostingApiFactory = Mockito.mock(VideoProviderFactory.class);
     private LinkRepository linkRepository;
@@ -51,18 +52,21 @@ public class ServiceLayerPaginationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        dataSource = repositoryConfig.pooledDataSource();
+        tx = new TransactionManager(dataSource);
         linkRepository = repositoryConfig.linkRepository();
         paginationStateRepository = repositoryConfig.paginationStateRepository();
         serviceLayer = serviceConfig.serviceLayer(mockHostingApiFactory);
 
         tx.executeWithoutResult(
-            () -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), VIDEO_COUNT));
+            () -> TestDataFactory.insertLinks(linkRepository, USER_ID, ZonedDateTime.now(), VIDEO_COUNT));
     }
 
     @AfterEach
     public void tearDown() {
         tx.executeWithoutResult(
             () -> Queries.update("TRUNCATE TABLE links, pagination_state RESTART IDENTITY CASCADE"));
+        dataSource.close();
     }
 
     @Test
@@ -267,5 +271,184 @@ public class ServiceLayerPaginationTest extends AbstractIntegrationTest {
         assertThat(failedResponseEither).isInstanceOf(Failure.class);
         assertThat(failedResponseEither.asFailure().exception()).isInstanceOf(
             RefreshInProgressException.class);
+    }
+
+    @Test
+    public void deleteVideo_happyPath() {
+        var links = tx.execute(() -> linkRepository.findFirstPage(USER_ID, VIDEOS_PER_PAGE));
+        long linkId = links.getFirst().id();
+
+        var result = serviceLayer.deleteVideo(USER_ID, linkId);
+        assertTrue(result.isSuccess());
+        assertTrue(result.get());
+    }
+
+    @Test
+    public void deleteVideo_notFound() {
+        var result = serviceLayer.deleteVideo(USER_ID, 99999L);
+        assertTrue(result.isFailure());
+        assertInstanceOf(LinkIdNotFoundException.class, result.asFailure().exception());
+    }
+
+    @Test
+    public void deleteVideo_wrongUser() {
+        var links = tx.execute(() -> linkRepository.findFirstPage(VIDEOS_PER_PAGE));
+        long linkId = links.getFirst().id();
+
+        var result = serviceLayer.deleteVideo(999L, linkId);
+        assertTrue(result.isFailure());
+        assertInstanceOf(LinkIdNotFoundException.class, result.asFailure().exception());
+    }
+
+    @Test
+    public void deleteVideo_firstLinkFromPage1_nextCursorStillWorks() {
+        var page1 = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
+
+        long linkId = Long.parseLong(page1.getItems().getFirst().id());
+        serviceLayer.deleteVideo(USER_ID, linkId);
+
+        var page2 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(page2.hasPrev());
+
+
+        page1 = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
+        assertFalse(page1.hasPrev());
+        assertThat(page1.getItems())
+            .extracting(VideoStatsItem::id)
+            .doesNotContain(String.valueOf(linkId));
+    }
+
+    @Test
+    public void deleteVideo_middleLinkFromPage2_nextCursorStillWorks() {
+        // navigate to page 2
+        serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
+        var page2 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+
+        long linkId = Long.parseLong(page2.getItems().get(2).id());
+        serviceLayer.deleteVideo(USER_ID, linkId);
+
+        var page3 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(page3.hasNext());
+        assertTrue(page3.hasPrev());
+        assertThat(page3.getItems()).extracting(VideoStatsItem::id)
+            .doesNotContain(String.valueOf(linkId));
+    }
+
+    @Test
+    public void deleteVideo_lastLinkFromLastPage_prevCursorStillWorks() {
+        // navigate to last page
+        var lastPage = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get();
+        while (lastPage.hasNext()) {
+            lastPage = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        }
+
+        var linkId = lastPage.getItems().getLast().id();
+        serviceLayer.deleteVideo(USER_ID, Long.parseLong(linkId));
+
+        var prevPage = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
+        assertEquals(VIDEOS_PER_PAGE, prevPage.getItems().size());
+
+        lastPage = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+
+        assertThat(lastPage.getItems())
+            .hasSize(4)
+            .extracting(VideoStatsItem::id)
+            .doesNotContain(linkId);
+    }
+
+    @Test
+    public void deleteVideo_onlyLink_getVideosReturnsEmpty() {
+        var newChatId = 43L;
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, newChatId, ZonedDateTime.now(), 1));
+
+        var page1 = serviceLayer.getVideos(newChatId, MESSAGE_ID).get();
+        assertFalse(page1.hasPrev());
+        assertFalse(page1.hasNext());
+        assertEquals(1, page1.getItems().size());
+
+        long linkId = Long.parseLong(page1.getItems().getFirst().id());
+        assertTrue(serviceLayer.deleteVideo(newChatId, linkId).isSuccess());
+
+        var resp = serviceLayer.getVideos(newChatId, MESSAGE_ID).get();
+        assertFalse(resp.hasNext());
+        assertFalse(resp.hasPrev());
+        assertEquals(0, resp.getTotalVideos());
+        assertThat(resp.getItems()).isEmpty();
+    }
+
+    @Test
+    public void deleteVideo_allLinksOnPage_nextAndPrevBehaveCorrectly() {
+        // navigate to page 2
+        var page1 = serviceLayer.getVideos(USER_ID, MESSAGE_ID).get().getItems();
+
+        assertThat(page1).extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(1, 2, 3, 4, 5);
+
+        var page2 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get().getItems();
+
+        assertThat(page2).extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(6, 7, 8, 9, 10);
+
+        // delete all links on page 2
+        page2.forEach(item -> serviceLayer.deleteVideo(USER_ID, Long.parseLong(item.id())));
+
+        // next should skip the empty range and return page 3 items
+        var next = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(next.hasPrev());
+        assertThat(next.getItems())
+            .extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(11, 12, 13, 14, 15);
+
+        // prev should go back to page 1
+        var prev = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
+        assertFalse(prev.hasPrev());
+        assertThat(prev.getItems())
+            .extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(1, 2, 3, 4, 5);
+    }
+
+    @Test
+    public void deleteVideo_boundaryIds_nextAndPrevStillNavigateCorrectly() {
+        var page1 = serviceLayer.getVideos(USER_ID, MESSAGE_ID)
+            .get().getItems();
+
+        assertThat(page1).extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(1, 2, 3, 4, 5);
+
+        // navigate to page 2
+        var page2 = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get().getItems();
+
+        assertThat(page2).extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(6, 7, 8, 9, 10);
+
+        // delete first_seen_id and last_seen_id of page 2
+        long firstSeenId = Long.parseLong(page2.getFirst().id());
+        assertThat(firstSeenId).isEqualTo(6);
+        long lastSeenId = Long.parseLong(page2.getLast().id());
+        assertThat(lastSeenId).isEqualTo(10);
+
+        assertThat(serviceLayer.deleteVideo(USER_ID, firstSeenId).isSuccess()).isTrue();
+        assertThat(serviceLayer.deleteVideo(USER_ID, lastSeenId).isSuccess()).isTrue();
+
+        // next uses stale last_seen_id as cursor — should still return page 3
+        var next = serviceLayer.getNextVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(next.hasPrev());
+        assertThat(next.getItems())
+            .extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(11, 12, 13, 14, 15);
+
+        var prev = serviceLayer.getPreviousVideos(USER_ID, MESSAGE_ID).get();
+        assertTrue(prev.hasPrev());
+        assertThat(prev.getItems())
+            .extracting(VideoStatsItem::id)
+            .extracting(Integer::parseInt)
+            .containsExactly(4, 5, 7, 8, 9);
     }
 }

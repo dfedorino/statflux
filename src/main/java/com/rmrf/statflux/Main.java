@@ -26,6 +26,7 @@ public class Main {
                 .use(handlersConfig.commandStartHandler())
                 .use(handlersConfig.commandStatsHandler())
                 .use(handlersConfig.linkHandler())
+                .use(handlersConfig.commandDeleteHandler())
                 .use(handlersConfig.defaultHandler())
                 .build();
 

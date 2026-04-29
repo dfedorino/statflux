@@ -6,6 +6,7 @@ import com.rmrf.statflux.domain.dto.RefreshVideosPagedResponse;
 import com.rmrf.statflux.domain.dto.VideoMetadataResponse;
 import com.rmrf.statflux.domain.dto.VideoStatsResponse;
 import com.rmrf.statflux.domain.exceptions.InternalTechErrorException;
+import com.rmrf.statflux.domain.exceptions.LinkIdNotFoundException;
 import com.rmrf.statflux.domain.exceptions.PageIsOutsideOfBoundsException;
 import com.rmrf.statflux.domain.exceptions.RefreshInProgressException;
 import com.rmrf.statflux.integration.VideoProviderFactory;
@@ -85,14 +86,15 @@ public class ServiceLayerImpl implements ServiceLayer {
                         s.result().views(),
                         ZonedDateTime.now(ZoneOffset.UTC)
                     );
-                    var success = linkRepository.save(dbItem);
-                    if (!success) {
+                    var saved = linkRepository.saveAndGet(dbItem);
+                    if (saved.isEmpty()) {
                         log.error("ServiceLayerImpl[addVideo] failed to save rawUrl={}", rawUrl);
                         yield Failure.of(
                             new InternalTechErrorException("failed to save metadata to repo"));
                     }
                     yield Success.of(
                         new AddVideoResponse(
+                            String.valueOf(saved.get().id()),
                             hostingApi.hostingName(),
                             s.result().title(),
                             rawUrl,
@@ -116,10 +118,10 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationStateDto -> {
-                var items = linkRepository.findFirstPage(videosPerPage);
-                var totalLinks = linkRepository.getTotalLinkCount();
-                var totalViews = linkRepository.getTotalViewSum();
+            return initSession(userId, messageId, paginationStateDto -> {
+                var items = linkRepository.findFirstPage(userId, videosPerPage);
+                var totalLinks = linkRepository.getTotalLinkCount(userId);
+                var totalViews = linkRepository.getTotalViewSum(userId);
 
                 var firstSeenId = items.isEmpty() ? null : items.getFirst().id();
                 var lastSeenId = items.isEmpty() ? null : items.getLast().id();
@@ -148,10 +150,10 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getNextVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationState -> {
-                var totalLinks = linkRepository.getTotalLinkCount();
+            return updateCurrentOrPrevSession(userId, messageId, paginationState -> {
+                var maxId = linkRepository.findMaxId(userId);
 
-                if (paginationState.lastSeenId() >= totalLinks) {
+                if (maxId.isPresent() && paginationState.lastSeenId() >= maxId.get()) {
                     log.error(
                         "UserSessionServiceImpl[getNextVideos] userId={} messageId={} lastSeenId=${} pagination overflow",
                         userId, messageId, paginationState.lastSeenId());
@@ -173,8 +175,10 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var responseItems = items.stream()
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
-                var hasMore = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var hasMore = maxId.isPresent() && lastSeenId < maxId.get();
+                var minId = linkRepository.findMinId(userId);
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
+                var totalLinks = linkRepository.getTotalLinkCount(userId);
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
@@ -193,8 +197,9 @@ public class ServiceLayerImpl implements ServiceLayer {
     public @NonNull Result<VideoStatsResponse> getPreviousVideos(@NonNull Long userId,
         @NonNull Long messageId) {
         try {
-            return updateOrInitSession(userId, messageId, paginationState -> {
-                if (paginationState.firstSeenId() <= 1) {
+            return updateCurrentOrPrevSession(userId, messageId, paginationState -> {
+                var minId = linkRepository.findMinId(userId);
+                if (minId.isPresent() && paginationState.firstSeenId() <= minId.get()) {
                     log.error(
                         "UserSessionServiceImpl[getPreviousVideos] userId={} messageId={} lastSeenId=${} pagination underflow",
                         userId, messageId, paginationState.lastSeenId());
@@ -217,8 +222,9 @@ public class ServiceLayerImpl implements ServiceLayer {
                 var responseItems = items.stream()
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
-                var hasMore = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var maxId = linkRepository.findMaxId(userId);
+                var hasMore = maxId.isPresent() && lastSeenId < maxId.get();
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 var resp = new VideoStatsResponse(responseItems, totalLinks, hasMore, hasPrev,
                     totalViews);
                 return Success.of(resp);
@@ -231,14 +237,21 @@ public class ServiceLayerImpl implements ServiceLayer {
         }
     }
 
-    private @NonNull Result<VideoStatsResponse> updateOrInitSession(Long userId, Long messageId,
+    private @NonNull Result<VideoStatsResponse> initSession(Long userId, Long messageId,
         Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
-        var maybePaginationState = paginationStateRepository.find(userId, messageId);
-        var paginationState = maybePaginationState.orElseGet(
-            () -> new PaginationStateDto(userId, messageId, 0L, (long) videosPerPage,
-                ZonedDateTime.now(
-                    ZoneId.of("UTC"))));
+        var paginationState = new PaginationStateDto(userId, messageId, 0L, (long) videosPerPage,
+                ZonedDateTime.now(ZoneId.of("UTC")));
         return f.apply(paginationState);
+    }
+
+    private @NonNull Result<VideoStatsResponse> updateCurrentOrPrevSession(Long userId, Long messageId,
+        Function<PaginationStateDto, Result<VideoStatsResponse>> f) {
+        return f.apply(paginationStateRepository.find(userId, messageId)
+            .or(() -> paginationStateRepository.find(userId, messageId - 1))
+            // should never end up here...
+            .orElseGet(() -> new PaginationStateDto(userId, messageId, 0L,
+                (long) videosPerPage,
+                ZonedDateTime.now(ZoneId.of("UTC")))));
     }
 
     @Override
@@ -332,7 +345,8 @@ public class ServiceLayerImpl implements ServiceLayer {
                     .map(LinkDto::toVideoStatsItem)
                     .toList();
                 var hasNext = lastSeenId < totalLinks;
-                var hasPrev = firstSeenId > 1;
+                var minId = linkRepository.findMinId(userId);
+                var hasPrev = minId.isPresent() && firstSeenId > minId.get();
                 return new RefreshVideosPagedResponse(responseItems, totalLinks,
                     hasNext, hasPrev, totalViews, hasErrorsFinal);
             });
@@ -347,5 +361,21 @@ public class ServiceLayerImpl implements ServiceLayer {
             refreshSemaphore.release();
         });
         workerThread.start();
+    }
+
+    @Override
+    @Transactional
+    public @NonNull Result<Boolean> deleteVideo(@NonNull Long userId, long linkId) {
+        try {
+            var deleted = linkRepository.delete(userId, linkId);
+            if (!deleted) {
+                log.error("ServiceLayerImpl[deleteVideo] no link found for userId={} linkId={}", userId, linkId);
+                return Failure.of(new LinkIdNotFoundException("no link found for id=" + linkId));
+            }
+            return Success.of(true);
+        } catch (Exception e) {
+            log.error("ServiceLayerImpl[deleteVideo] unhandled exception", e);
+            return Failure.of(e);
+        }
     }
 }

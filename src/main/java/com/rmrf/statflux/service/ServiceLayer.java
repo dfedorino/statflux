@@ -11,6 +11,8 @@ public interface ServiceLayer {
 
 
     /**
+     * Добавление нового видео для конкретного пользователя/чата
+     *
      * @param userId    идентификатор текущего пользователя/чата
      * @param rawUrl url видео
      * @return результат добавления видео для последующего отслеживания
@@ -59,4 +61,15 @@ public interface ServiceLayer {
      */
     void refreshVideos(@NonNull Long userId, @NonNull Long messageId,
         Consumer<Result<RefreshVideosPagedResponse>> callback);
+
+
+    /**
+     * Удаление видео по ID для конкретного пользователя/чата
+     *
+     * @param userId идентификатор текущего пользователя/чата
+     * @param linkId идентификатор ссылки
+     * @return результат удаления ссылки из отслеживаемых
+     */
+    @NonNull
+    Result<Boolean> deleteVideo(@NonNull Long userId, long linkId);
 }

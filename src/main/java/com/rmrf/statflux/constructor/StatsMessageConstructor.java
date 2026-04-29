@@ -22,7 +22,12 @@ public class StatsMessageConstructor {
     public String getText() {
         StringBuilder videosStatsInfo = new StringBuilder();
         for (VideoStatsItem video : statsResponse.getItems()) {
-            videosStatsInfo = videosStatsInfo.append('[')
+            videosStatsInfo
+                    .append("\\[")
+                    .append(video.id())
+                    .append("\\]")
+                    .append(' ')
+                    .append('[')
                     .append(TelegramBotFormatter.escapeSpecial(video.name()))
                     .append(']')
                     .append('(')
