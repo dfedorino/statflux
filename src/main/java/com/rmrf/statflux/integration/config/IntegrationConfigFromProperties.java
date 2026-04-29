@@ -37,6 +37,11 @@ public class IntegrationConfigFromProperties implements IntegrationConfig {
     private final String vkApiVersion;
 
     /**
+     * Базовый URL RuTube API.
+     */
+    private final String rutubeApiUrl;
+
+    /**
      * IntegrationConfig конструктор.
      */
     public IntegrationConfigFromProperties(Properties props) {
@@ -47,5 +52,7 @@ public class IntegrationConfigFromProperties implements IntegrationConfig {
         this.vkApiUrl = props.getProperty("vk.api.url");
         this.vkApiKey = props.getProperty("vk.api.token");
         this.vkApiVersion = props.getProperty("vk.api.version");
+
+        this.rutubeApiUrl = props.getProperty("rutube.api.url");
     }
 }

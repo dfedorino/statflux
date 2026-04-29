@@ -7,7 +7,7 @@ import lombok.Getter;
  */
 @Getter
 public enum Platform {
-    YOUTUBE("YouTube"), VK("VK");
+    YOUTUBE("YouTube"), VK("VK"), RUTUBE("RuTube");
 
     private final String displayName;
 

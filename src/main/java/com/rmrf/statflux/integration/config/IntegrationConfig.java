@@ -39,4 +39,11 @@ public interface IntegrationConfig {
      * @return версия VK API (не {@code null})
      */
     String getVkApiVersion();
+
+    /**
+     * Возвращает базовый URL RuTube API.
+     *
+     * @return URL без завершающего слеша (не {@code null})
+     */
+    String getRutubeApiUrl();
 }
