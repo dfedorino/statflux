@@ -3,6 +3,7 @@ package com.rmrf.statflux.bot.infra.handler;
 import com.rmrf.statflux.bot.core.Chain;
 import com.rmrf.statflux.bot.core.TelegramBotContext;
 import com.rmrf.statflux.bot.infra.l10n.Localization;
+import com.rmrf.statflux.bot.infra.util.MessageUrlsExtractor;
 import com.rmrf.statflux.bot.infra.util.TelegramBotFormatter;
 import com.rmrf.statflux.domain.dto.AddVideoResponse;
 import com.rmrf.statflux.service.ServiceLayer;
@@ -12,6 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.ReplyParameters;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -26,21 +28,37 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
 
     @Override
     public void handle(TelegramBotContext ctx, Consumer<TelegramBotContext> next) {
+        if (!ctx.update().hasMessage()) {
+            next.accept(ctx);
+            return;
+        }
         Message message = ctx.update().getMessage();
-        if (!ctx.update().hasMessage() || !message.hasText() ||
-            !message.getText().startsWith("https://")) {
+        List<String> candidates = MessageUrlsExtractor.extract(message);
+        if (candidates.isEmpty()) {
             next.accept(ctx);
             return;
         }
 
-        String link = ctx.update().getMessage().getText();
-        var responseResult = serviceLayer.addVideo(ctx.update().getMessage().getChatId(), link);
-        if (responseResult.isFailure()) {
+        if (candidates.size() > 1) {
+            log.info("LinkHandler[handle] found {} url candidates, picking first valid",
+                candidates.size());
+        }
+
+        Long chatId = message.getChatId();
+        AddVideoResponse success = null;
+        for (String url : candidates) {
+            var result = serviceLayer.addVideo(chatId, url);
+            if (result.isSuccess()) {
+                success = result.get();
+                break;
+            }
+        }
+
+        if (success == null) {
             handleIncorrect(ctx);
             return;
         }
-
-        handleSuccess(ctx, responseResult.get());
+        handleSuccess(ctx, success);
     }
 
     private void handleSuccess(TelegramBotContext ctx, AddVideoResponse response) {
