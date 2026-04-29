@@ -34,7 +34,7 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
         }
 
         String link = ctx.update().getMessage().getText();
-        var responseResult = serviceLayer.addVideo(link);
+        var responseResult = serviceLayer.addVideo(ctx.update().getMessage().getChatId(), link);
         if (responseResult.isFailure()) {
             handleIncorrect(ctx);
             return;
@@ -55,10 +55,12 @@ public class LinkHandler implements Chain.Node<TelegramBotContext> {
                 .append('(')
                 .append(response.rawUrl())
                 .append(')')
-                .append(Localization.DOUBLE_CARRY)
+                .append('\n')
+                .append('_')
                 .append(localization.views)
                 .append(' ')
-                .append(response.views())
+                .append(TelegramBotFormatter.groupThousands(response.views()))
+                .append('_')
                 .append(Localization.DOUBLE_CARRY)
                 .append(localization.statsMotivationText)
                 .toString();

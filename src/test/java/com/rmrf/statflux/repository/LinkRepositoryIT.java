@@ -2,7 +2,6 @@ package com.rmrf.statflux.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.github.dockerjava.api.model.Repository;
 import com.rmrf.statflux.AbstractIntegrationTest;
 import com.rmrf.statflux.repository.config.RepositoryConfig;
 import com.rmrf.statflux.repository.dto.LinkDto;
@@ -40,6 +39,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -55,6 +55,61 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .first()
             .isEqualTo(new LinkDto(
                 1L,
+                1L,
+                "YouTube",
+                "https://youtube.com/v/123",
+                "123",
+                "My video",
+                1000L,
+                now
+            ));
+    }
+
+    @Test
+    void should_insert_same_video_in_different_chats() {
+
+        ZonedDateTime now = ZonedDateTime
+            .now(ZoneOffset.UTC)
+            .truncatedTo(ChronoUnit.MICROS);
+
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
+            null,
+            1L,
+            "YouTube",
+            "https://youtube.com/v/123",
+            "123",
+            "My video",
+            1000L,
+            now
+        )))).isTrue();
+
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
+            null,
+            2L,
+            "YouTube",
+            "https://youtube.com/v/123",
+            "123",
+            "My video",
+            1000L,
+            now
+        )))).isTrue();
+
+        var links = tx.execute(() -> linkRepository.findAll());
+
+        assertThat(links)
+            .hasSize(2)
+            .containsExactlyInAnyOrder(new LinkDto(
+                1L,
+                1L,
+                "YouTube",
+                "https://youtube.com/v/123",
+                "123",
+                "My video",
+                1000L,
+                now
+            ), new LinkDto(
+                2L,
+                2L,
                 "YouTube",
                 "https://youtube.com/v/123",
                 "123",
@@ -72,6 +127,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -84,6 +140,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .truncatedTo(ChronoUnit.MICROS);
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
+            1L,
             1L,
             "YouTube",
             "https://youtube.com/v/123",
@@ -100,6 +157,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .first()
             .isEqualTo(new LinkDto(
                 1L,
+                1L,
                 "YouTube",
                 "https://youtube.com/v/123",
                 "123",
@@ -114,6 +172,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -124,6 +183,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/456",
             "456",
@@ -146,6 +206,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/123",
             "123",
@@ -156,6 +217,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
 
         assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
             null,
+            1L,
             "YouTube",
             "https://youtube.com/v/456",
             "456",
@@ -187,6 +249,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     1L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/1",
                     "1",
@@ -196,6 +259,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -222,6 +286,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     1L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/1",
                     "1",
@@ -231,6 +296,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -240,6 +306,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     3L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/3",
                     "3",
@@ -264,6 +331,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -273,6 +341,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     3L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/3",
                     "3",
@@ -297,6 +366,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -306,6 +376,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     3L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/3",
                     "3",
@@ -315,6 +386,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     4L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/4",
                     "4",
@@ -339,6 +411,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     1L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/1",
                     "1",
@@ -348,6 +421,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -372,6 +446,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
             .containsExactly(
                 new LinkDto(
                     1L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/1",
                     "1",
@@ -381,6 +456,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     2L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/2",
                     "2",
@@ -390,6 +466,7 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 ),
                 new LinkDto(
                     3L,
+                    1L,
                     "YouTube",
                     "https://youtube.com/v/3",
                     "3",

@@ -48,6 +48,7 @@ public class ConnectionPoolIT extends AbstractIntegrationTest {
             tx.executeWithoutResult(() -> linkRepository.findAllForUpdate()
                 .forEach(link -> linkRepository.save(new LinkDto(
                     link.id(),
+                    1L,
                     link.hostingName(),
                     link.rawLink(),
                     link.hostingId(),
@@ -68,6 +69,7 @@ public class ConnectionPoolIT extends AbstractIntegrationTest {
                 .forEach(link -> {
                 linkRepository.save(new LinkDto(
                     link.id(),
+                    1L,
                     link.hostingName(),
                     link.rawLink(),
                     link.hostingId(),

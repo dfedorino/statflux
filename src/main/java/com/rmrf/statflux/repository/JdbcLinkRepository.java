@@ -15,6 +15,7 @@ public class JdbcLinkRepository implements LinkRepository {
 
     private static final ResultSetMapper<LinkDto> LINK_DTO_RESULT_SET_MAPPER = rs -> new LinkDto(
         rs.getLong("id"),
+        rs.getLong("chat_id"),
         rs.getString("hosting_name"),
         rs.getString("raw_link"),
         rs.getString("hosting_id"),
@@ -34,11 +35,13 @@ public class JdbcLinkRepository implements LinkRepository {
             linkDto.title(),
             linkDto.views(),
             Timestamp.from(linkDto.updatedAt().toInstant()),
+            linkDto.chatId(),
             linkDto.hostingName(),
             linkDto.hostingId());
 
         return updated == 1 || Queries.update(
             LinkSql.INSERT,
+            linkDto.chatId(),
             linkDto.hostingName(),
             linkDto.rawLink(),
             linkDto.hostingId(),
@@ -53,6 +56,15 @@ public class JdbcLinkRepository implements LinkRepository {
         return Queries.query(
             LinkSql.FIND_ALL,
             LINK_DTO_RESULT_SET_MAPPER);
+    }
+
+    @Override
+    public List<LinkDto> findBetweenIds(long minId, long maxId) {
+        return Queries.query(
+            LinkSql.FIND_BETWEEN_IDS,
+            LINK_DTO_RESULT_SET_MAPPER,
+            minId,
+            maxId);
     }
 
     @Override

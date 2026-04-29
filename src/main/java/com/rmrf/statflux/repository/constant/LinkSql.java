@@ -8,6 +8,7 @@ public final class LinkSql {
     public static final String INSERT =
         """
             INSERT INTO links (
+                chat_id,
                 hosting_name,
                 raw_link,
                 hosting_id,
@@ -15,7 +16,7 @@ public final class LinkSql {
                 views,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
 
     public static final String UPDATE =
@@ -25,7 +26,8 @@ public final class LinkSql {
                 title = ?,
                 views = ?,
                 updated_at = ?
-            WHERE hosting_name = ?
+            WHERE chat_id = ?
+              AND hosting_name = ?
               AND hosting_id = ?
             """;
 
@@ -49,4 +51,7 @@ public final class LinkSql {
 
     public static final String FIND_PREVIOUS_PAGE =
         "SELECT * FROM links WHERE id < ? ORDER BY id DESC LIMIT ?";
+
+    public static final String FIND_BETWEEN_IDS =
+        "SELECT * FROM links WHERE id BETWEEN ? AND ? ORDER BY id ASC";
 }

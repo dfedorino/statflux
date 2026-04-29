@@ -11,11 +11,12 @@ public interface ServiceLayer {
 
 
     /**
+     * @param userId    идентификатор текущего пользователя/чата
      * @param rawUrl url видео
      * @return результат добавления видео для последующего отслеживания
      */
     @NonNull
-    Result<AddVideoResponse> addVideo(@NonNull String rawUrl);
+    Result<AddVideoResponse> addVideo(@NonNull Long userId, @NonNull String rawUrl);
 
     /**
      * Получение списка видео и статистики для первой страницы / сброс страницы на первую

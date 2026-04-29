@@ -16,7 +16,7 @@ public class NextCallbackHandler extends AbstractStatsCallbackHandler {
     private final Localization l10n;
 
     public NextCallbackHandler(ServiceLayer serviceLayer, Localization l10n) {
-        super(l10n.stats, log);
+        super(l10n.stats, l10n.timeFormat, log);
         this.serviceLayer = serviceLayer;
         this.l10n = l10n;
     }
