@@ -1,5 +1,6 @@
 package com.rmrf.statflux.integration;
 
+import static com.rmrf.statflux.integration.Stubs.rutubeStub;
 import static com.rmrf.statflux.integration.Stubs.vkStub;
 import static com.rmrf.statflux.integration.Stubs.youtubeStub;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class VideoProviderFactoryTest {
 
-    private final VideoProviderFactory factory = new VideoProviderFactory(youtubeStub, vkStub);
+    private final VideoProviderFactory factory = new VideoProviderFactory(youtubeStub, vkStub, rutubeStub);
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("youtubeUrls")
@@ -45,6 +46,25 @@ public class VideoProviderFactoryTest {
                 "https://m.vkvideo.ru/video-213638597_456239147?from=search"),
             Arguments.of("correct shared VK Video link",
                 "https://vkvideo.ru/video-213638597_456239147?list=ln-ZJlWY456pSfIkF5EYt")
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("rutubeUrls")
+    void returnsRutubeHostingApiForCorrectRutubeLinks(String description, String url) {
+        assertThat(factory.forUrl(url).contains(rutubeStub));
+    }
+
+    private static Stream<Arguments> rutubeUrls() {
+        return Stream.of(
+            Arguments.of("correct RuTube link",
+                "https://rutube.ru/video/10b3a03fc01d5bbcc632a2f3514e8aab/"),
+            Arguments.of("correct RuTube link without trailing slash",
+                "https://rutube.ru/video/10b3a03fc01d5bbcc632a2f3514e8aab"),
+            Arguments.of("correct RuTube link with query",
+                "https://rutube.ru/video/10b3a03fc01d5bbcc632a2f3514e8aab/?p=abcd"),
+            Arguments.of("correct mobile RuTube link",
+                "https://m.rutube.ru/video/10b3a03fc01d5bbcc632a2f3514e8aab/")
         );
     }
 

@@ -7,6 +7,8 @@ import com.rmrf.statflux.domain.exceptions.UnsupportedUrlException;
 import com.rmrf.statflux.domain.result.Failure;
 import com.rmrf.statflux.domain.result.Result;
 import com.rmrf.statflux.domain.result.Success;
+import com.rmrf.statflux.integration.rutube.RutubeUrlParser;
+import com.rmrf.statflux.integration.rutube.RutubeVideoProvider;
 import com.rmrf.statflux.integration.vk.VkVideoProvider;
 import com.rmrf.statflux.integration.youtube.YouTubeUrlParser;
 import com.rmrf.statflux.integration.youtube.YouTubeVideoProvider;
@@ -18,17 +20,26 @@ public class VideoProviderFactory {
 
     private final YouTubeVideoProvider youTubeVideoProvider;
     private final VkVideoProvider vkVideoProvider;
+    private final RutubeVideoProvider rutubeVideoProvider;
 
-    public VideoProviderFactory(YouTubeVideoProvider youTubeVideoProvider,
-        VkVideoProvider vkVideoProvider) {
+    public VideoProviderFactory(
+        YouTubeVideoProvider youTubeVideoProvider,
+        VkVideoProvider vkVideoProvider,
+        RutubeVideoProvider rutubeVideoProvider
+    ) {
         this.youTubeVideoProvider = youTubeVideoProvider;
         this.vkVideoProvider = vkVideoProvider;
+        this.rutubeVideoProvider = rutubeVideoProvider;
     }
 
     public Result<VideoProvider> forUrl(String rawUrl) {
         try {
             if (YouTubeUrlParser.isValidYouTubeUrl(rawUrl)) {
                 return Success.of(youTubeVideoProvider);
+            }
+
+            if (RutubeUrlParser.isValidRutubeUrl(rawUrl)) {
+                return Success.of(rutubeVideoProvider);
             }
 
             var host = URI.create(rawUrl).getHost().toLowerCase();
@@ -49,6 +60,10 @@ public class VideoProviderFactory {
 
         if (platform == Platform.VK) {
             return Success.of(vkVideoProvider);
+        }
+
+        if (platform == Platform.RUTUBE) {
+            return Success.of(rutubeVideoProvider);
         }
 
         return Failure.of(new UnsupportedPlatform("Unsupported platform!"));
