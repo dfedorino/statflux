@@ -476,4 +476,73 @@ public class LinkRepositoryIT extends AbstractIntegrationTest {
                 )
             );
     }
+
+    @Test
+    void should_delete_video() {
+
+        ZonedDateTime now = ZonedDateTime
+            .now(ZoneOffset.UTC)
+            .truncatedTo(ChronoUnit.MICROS);
+
+        assertThat(tx.execute(() -> linkRepository.save(new LinkDto(
+            null,
+            1L,
+            "YouTube",
+            "https://youtube.com/v/123",
+            "123",
+            "My video",
+            1000L,
+            now
+        )))).isTrue();
+
+        assertThat(tx.execute(() -> linkRepository.delete(1L, 1L)))
+            .isTrue();
+
+        var links = tx.execute(() -> linkRepository.findAll());
+
+        assertThat(links).isEmpty();
+    }
+
+    @Test
+    void should_return_min_id() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), 3));
+
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isPresent();
+        assertThat(minId.get()).isEqualTo(1L);
+    }
+
+    @Test
+    void should_return_min_id_after_deletion_of_first() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, ZonedDateTime.now(), 3));
+
+        long firstId = tx.execute(() -> linkRepository.findFirstPage(1).getFirst().id());
+        tx.executeWithoutResult(() -> linkRepository.delete(1L, firstId));
+
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isPresent();
+        assertThat(minId.get()).isGreaterThan(firstId);
+    }
+
+    @Test
+    void should_return_empty_when_no_links() {
+        var minId = tx.execute(() -> linkRepository.findMinId(1L));
+
+        assertThat(minId).isEmpty();
+    }
+
+    @Test
+    void should_return_min_id_only_for_given_chat() {
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, 1L, ZonedDateTime.now(), 3));
+        tx.executeWithoutResult(() -> TestDataFactory.insertLinks(linkRepository, 2L, ZonedDateTime.now(), 3));
+
+        var minIdChat1 = tx.execute(() -> linkRepository.findMinId(1L));
+        var minIdChat2 = tx.execute(() -> linkRepository.findMinId(2L));
+
+        assertThat(minIdChat1).isPresent();
+        assertThat(minIdChat2).isPresent();
+        assertThat(minIdChat1.get()).isNotEqualTo(minIdChat2.get());
+    }
 }

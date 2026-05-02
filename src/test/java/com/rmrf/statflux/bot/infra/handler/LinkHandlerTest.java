@@ -63,7 +63,7 @@ class LinkHandlerTest {
     }
 
     private static Result<AddVideoResponse> ok(String url) {
-        return Success.of(new AddVideoResponse("YouTube", "title-" + url, url, 100L));
+        return Success.of(new AddVideoResponse("id", "YouTube", "title-" + url, url, 100L));
     }
 
     private static Result<AddVideoResponse> fail() {

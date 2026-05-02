@@ -9,6 +9,8 @@ import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.NonNull;
 
 public class JdbcLinkRepository implements LinkRepository {
@@ -52,6 +54,22 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public Optional<LinkDto> saveAndGet(@NonNull LinkDto linkDto) {
+        // TODO: improvement - upsert
+        return Queries.query(
+            LinkSql.UPSERT,
+            LINK_DTO_RESULT_SET_MAPPER,
+            linkDto.chatId(),
+            linkDto.hostingName(),
+            linkDto.rawLink(),
+            linkDto.hostingId(),
+            linkDto.title(),
+            linkDto.views(),
+            Timestamp.from(linkDto.updatedAt().toInstant())
+        ).stream().findFirst();
+    }
+
+    @Override
     public List<LinkDto> findAll() {
         return Queries.query(
             LinkSql.FIND_ALL,
@@ -84,6 +102,16 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public int getTotalLinkCount(long chatId) {
+        return Queries.query(
+                LinkSql.GET_TOTAL_LINK_COUNT_BY_CHAT_ID,
+                rs -> rs.getInt(1),
+                chatId
+            )
+            .getFirst();
+    }
+
+    @Override
     public long getTotalViewSum() {
         return Queries.query(
                 LinkSql.GET_TOTAL_VIEW_SUM,
@@ -93,10 +121,30 @@ public class JdbcLinkRepository implements LinkRepository {
     }
 
     @Override
+    public long getTotalViewSum(long chatId) {
+        return Queries.query(
+                LinkSql.GET_TOTAL_VIEW_SUM_BY_CHAT_ID,
+                rs -> rs.getLong(1),
+                chatId
+            )
+            .getFirst();
+    }
+
+    @Override
     public List<LinkDto> findFirstPage(int limit) {
         return Queries.query(
             LinkSql.FIND_FIRST_PAGE,
             LINK_DTO_RESULT_SET_MAPPER,
+            limit
+        );
+    }
+
+    @Override
+    public List<LinkDto> findFirstPage(long chatId, int limit) {
+        return Queries.query(
+            LinkSql.FIND_FIRST_PAGE_BY_CHAT_ID,
+            LINK_DTO_RESULT_SET_MAPPER,
+            chatId,
             limit
         );
     }
@@ -122,5 +170,38 @@ public class JdbcLinkRepository implements LinkRepository {
 
         Collections.reverse(result);
         return result;
+    }
+
+    @Override
+    public boolean delete(long chatId, long linkId) {
+        return Queries.update(
+            LinkSql.DELETE,
+            linkId,
+            chatId
+        ) > 0;
+    }
+
+    @Override
+    public Optional<Long> findMinId(long chatId) {
+        return Queries.query(
+            LinkSql.FIND_MIN_ID,
+            rs -> {
+                long val = rs.getLong(1);
+                return rs.wasNull() ? null : val;
+            },
+            chatId
+        ).stream().filter(Objects::nonNull).findAny();
+    }
+
+    @Override
+    public Optional<Long> findMaxId(long chatId) {
+        return Queries.query(
+            LinkSql.FIND_MAX_ID,
+            rs -> {
+                long val = rs.getLong(1);
+                return rs.wasNull() ? null : val;
+            },
+            chatId
+        ).stream().filter(Objects::nonNull).findAny();
     }
 }

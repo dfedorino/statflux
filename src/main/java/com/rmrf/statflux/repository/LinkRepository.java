@@ -2,11 +2,15 @@ package com.rmrf.statflux.repository;
 
 import com.rmrf.statflux.repository.dto.LinkDto;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 
 public interface LinkRepository {
 
+    @Deprecated
     boolean save(@NonNull LinkDto linkDto);
+
+    Optional<LinkDto> saveAndGet(@NonNull LinkDto linkDto);
 
     List<LinkDto> findAll();
 
@@ -16,12 +20,24 @@ public interface LinkRepository {
 
     int getTotalLinkCount();
 
+    int getTotalLinkCount(long chatId);
+
     long getTotalViewSum();
 
+    long getTotalViewSum(long chatId);
+
     List<LinkDto> findFirstPage(int limit);
+
+    List<LinkDto> findFirstPage(long chatId, int limit);
 
     List<LinkDto> findNextPage(long lastSeenId, int limit);
 
     List<LinkDto> findPreviousPage(long firstSeenId, int limit);
+
+    boolean delete(long chatId, long linkId);
+
+    Optional<Long> findMinId(long chatId);
+
+    Optional<Long> findMaxId(long chatId);
 
 }
