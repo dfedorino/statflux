@@ -24,7 +24,7 @@ public class WhiteListMiddleware implements Chain.Node<TelegramBotContext> {
 
         log.debug("Filtering");
         String username = ctx.update().getMessage().getFrom().getUserName();
-        if (allowedUsernames.contains(username)) {
+        if (username != null && allowedUsernames.contains(username)) {
             log.info(String.format("User '%s' was verified successfully", username));
             next.accept(ctx);
         } else {
