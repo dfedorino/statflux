@@ -1,0 +1,130 @@
+@startuml statflux_architecture
+allow_mixing
+left to right direction
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 10
+skinparam packageFontSize 11
+skinparam nodesep 48
+skinparam ranksep 36
+skinparam packagePadding 6
+title STATFLUX - слои и основные типы
+
+skinparam package<<telegram>> {
+  BackgroundColor #E8F5E9
+  BorderColor #43A047
+}
+skinparam package<<service>> {
+  BackgroundColor #FFF9C4
+  BorderColor #F9A825
+}
+skinparam package<<integrations>> {
+  BackgroundColor #E3F2FD
+  BorderColor #1E88E5
+}
+skinparam package<<repository>> {
+  BackgroundColor #F3E5F5
+  BorderColor #8E24AA
+}
+
+actor "Пользователь" as User
+cloud "Telegram Bot API" as ExtTG #FFFFFF
+cloud "YouTube / VK / Rutube" as ExtHost #FFFFFF
+database "PostgreSQL" as ExtDB #E1F5FE
+
+package "Слой Telegram (bot)" <<telegram>> as TG_LAYER {
+  class Main
+  class TelegramBotRootConsumer <<record>>
+  class Chain
+  class TelegramBotContext <<record>>
+  class HandlersConfig
+}
+
+package "Сервисный слой (service)" <<service>> as SVC_LAYER {
+  interface ServiceLayer
+  class ServiceLayerImpl
+  class ServiceConfig
+}
+
+package "Интеграции (integration)" <<integrations>> as INT_LAYER {
+  interface VideoProvider
+  class YouTubeVideoProviderImpl
+  class VkVideoProviderImpl
+  class RutubeVideoProviderImpl
+  class VideoProviderFactory
+  class SimpleHttpClient
+  class IntegrationLayerConfig
+  interface IntegrationConfig
+}
+
+package "Слой данных (repository)" <<repository>> as REPO_LAYER {
+  interface LinkRepository
+  interface PaginationStateRepository
+  class JdbcLinkRepository
+  class JdbcPaginationStateRepository
+  interface DataSource
+  class PooledDataSource
+  class TransactionManager
+  class TransactionalProxy
+  class RepositoryConfig
+}
+
+note right of HandlersConfig
+  Хендлеры + middleware + TelegramBotConfig;
+  polling: TelegramBotsLongPollingApplication
+end note
+
+TG_LAYER -[hidden]right- SVC_LAYER
+SVC_LAYER -[hidden]right- INT_LAYER
+INT_LAYER -[hidden]right- REPO_LAYER
+
+User --> ExtTG : чат
+ExtTG --> TelegramBotRootConsumer : updates
+
+Main --> TelegramBotRootConsumer
+TelegramBotRootConsumer *-- Chain : Update
+Chain ..> HandlersConfig : Chain.Node
+TelegramBotRootConsumer ..> TelegramBotContext
+HandlersConfig ..> IntegrationConfig
+HandlersConfig ..> IntegrationLayerConfig : создаёт
+HandlersConfig ..> ServiceConfig : serviceLayer(factory)
+HandlersConfig ..> ServiceLayer : в хендлеры
+
+ServiceConfig ..> RepositoryConfig : БД, пул
+ServiceConfig ..> VideoProviderFactory : factory
+ServiceConfig ..> ServiceLayerImpl
+ServiceConfig ..> TransactionalProxy : JDK Proxy + транзакции
+TransactionalProxy ..> ServiceLayerImpl
+ServiceLayer <|.. ServiceLayerImpl
+
+ServiceLayerImpl --> VideoProviderFactory
+ServiceLayerImpl --> LinkRepository
+ServiceLayerImpl --> PaginationStateRepository
+ServiceLayerImpl --> TransactionManager
+
+VideoProvider <|.. YouTubeVideoProviderImpl
+VideoProvider <|.. VkVideoProviderImpl
+VideoProvider <|.. RutubeVideoProviderImpl
+VideoProviderFactory --> VideoProvider
+YouTubeVideoProviderImpl --> SimpleHttpClient
+VkVideoProviderImpl --> SimpleHttpClient
+RutubeVideoProviderImpl --> SimpleHttpClient
+IntegrationLayerConfig --> VideoProviderFactory
+IntegrationLayerConfig --> IntegrationConfig
+IntegrationLayerConfig --> SimpleHttpClient
+SimpleHttpClient .. ExtHost : HTTP
+
+LinkRepository <|.. JdbcLinkRepository
+PaginationStateRepository <|.. JdbcPaginationStateRepository
+RepositoryConfig ..> PooledDataSource
+RepositoryConfig ..> TransactionManager
+RepositoryConfig ..> JdbcLinkRepository
+RepositoryConfig ..> JdbcPaginationStateRepository
+JdbcLinkRepository --> DataSource
+JdbcPaginationStateRepository --> DataSource
+TransactionManager --> DataSource
+DataSource <|.. PooledDataSource
+PooledDataSource .. ExtDB : JDBC
+
+@enduml
