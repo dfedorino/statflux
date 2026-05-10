@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rmrf.statflux.AbstractIntegrationTest;
 import com.rmrf.statflux.repository.config.RepositoryConfig;
+import com.rmrf.statflux.repository.datasource.DataSource;
 import com.rmrf.statflux.repository.dto.LinkDto;
 import com.rmrf.statflux.repository.dto.PaginationStateDto;
 import com.rmrf.statflux.repository.transaction.TransactionManager;
@@ -15,13 +16,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FullFlowIT extends AbstractIntegrationTest {
-    private final RepositoryConfig repositoryConfig = new RepositoryConfig();
-    private final TransactionManager tx = new TransactionManager(repositoryConfig.pooledDataSource());
+    private DataSource dataSource;
+    private TransactionManager tx;
     private LinkRepository linkRepository;
     private PaginationStateRepository paginationStateRepository;
 
     @BeforeEach
     public void setup() {
+        RepositoryConfig repositoryConfig = new RepositoryConfig();
+        dataSource = repositoryConfig.pooledDataSource();
+        tx = new TransactionManager(dataSource);
         linkRepository = repositoryConfig.linkRepository();
         paginationStateRepository = repositoryConfig.paginationStateRepository();
     }
@@ -30,6 +34,7 @@ public class FullFlowIT extends AbstractIntegrationTest {
     public void tearDown() {
         tx.executeWithoutResult(
             () -> Queries.update("TRUNCATE TABLE links, pagination_state RESTART IDENTITY CASCADE"));
+        dataSource.close();
     }
 
     @Test

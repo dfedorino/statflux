@@ -180,6 +180,49 @@
                 <version>3.5.5</version>
             </plugin>
             <plugin>
+                <!-- Генерация отчета и архивирование -->
+                <!-- mvn verify jacoco:report -DskipCheckstyle -->
+                <!-- zip -r jacoco-report.zip target/site/jacoco/ и открыть  target/site/jacoco/index.html-->
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <configuration>
+                    <excludes>
+                        <!-- Config/DI — ручная сборка зависимостей, не тестируется -->
+                        <exclude>com/rmrf/statflux/bot/infra/config/**</exclude>
+                        <exclude>com/rmrf/statflux/integration/config/**</exclude>
+                        <exclude>com/rmrf/statflux/service/config/**</exclude>
+                        <exclude>com/rmrf/statflux/repository/config/**</exclude>
+                        <exclude>com/rmrf/statflux/constructor/**</exclude>
+                        <exclude>com/rmrf/statflux/Main*</exclude>
+                        <!-- DTO/record — data-контейнеры без логики -->
+                        <exclude>com/rmrf/statflux/repository/dto/**</exclude>
+                        <exclude>com/rmrf/statflux/domain/dto/**</exclude>
+                        <exclude>com/rmrf/statflux/integration/youtube/dto/**</exclude>
+                        <exclude>com/rmrf/statflux/integration/rutube/dto/**</exclude>
+                        <!-- Исключения без логики -->
+                        <exclude>com/rmrf/statflux/repository/exception/**</exclude>
+                        <exclude>com/rmrf/statflux/domain/exceptions/**</exclude>
+                        <!-- Локализация — строки, не логика -->
+                        <exclude>com/rmrf/statflux/bot/infra/l10n/**</exclude>
+                        <!-- HTTP-обёртка, покрывается интеграционными тестами косвенно -->
+                        <exclude>com/rmrf/statflux/integration/utils/**</exclude>
+                        <!-- Загрузчик конфигов при старте -->
+                        <exclude>com/rmrf/statflux/common/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals><goal>prepare-agent</goal></goals>
+                    </execution>
+                    <execution>
+                        <id>prepare-agent-integration</id>
+                        <goals><goal>prepare-agent-integration</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.2.5</version>

@@ -20,15 +20,22 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 public class ConnectionPoolIT extends AbstractIntegrationTest {
 
+    private DataSource dataSource;
     private LinkRepository linkRepository;
     private TransactionManager tx;
 
     @BeforeEach
     public void setup() {
         RepositoryConfig repositoryConfig = new RepositoryConfig();
+        dataSource = repositoryConfig.pooledDataSource();
         linkRepository = repositoryConfig.linkRepository();
-        tx = new TransactionManager(repositoryConfig.pooledDataSource());
+        tx = new TransactionManager(dataSource);
         tx.executeWithoutResult(() -> SqlScripts.run("schema.sql"));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        dataSource.close();
     }
 
     @Test
